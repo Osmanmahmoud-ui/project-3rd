@@ -12,11 +12,13 @@ st.set_page_config(
 # -------------------------------------------------------
 # Currency Conversion
 # -------------------------------------------------------
+
 EUR_TO_EGP = 62.669
 
 # -------------------------------------------------------
-# Dashboard Dataset (UNCHANGED)
+# Dashboard Dataset
 # -------------------------------------------------------
+
 df = pd.DataFrame([
     {
         "Method": "Mechanical Recycling",
