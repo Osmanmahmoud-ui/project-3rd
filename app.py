@@ -3,229 +3,276 @@ import pandas as pd
 import plotly.express as px
 
 st.set_page_config(
-    page_title="Plastic Recycling Technologies in Egypt",
+    page_title="Egypt Plastic Recycling Comparison",
     page_icon="♻️",
     layout="wide"
 )
 
+# -----------------------------
+# Dataset
+# Notes:
+# - Egypt context is based on EEAA / UNIDO waste-management context.
+# - GWP, CED, and cost are screening-level assumptions for comparison.
+# - Replace with exact values later if you get a detailed EEAA datasheet.
+# -----------------------------
+
 df = pd.DataFrame([
     {
-        "method": "Mechanical recycling",
-        "efficiency_min_percent": 85,
-        "efficiency_max_percent": 90,
-        "energy_intensity_score_1_low_5_high": 1,
-        "capex_score_1_low_5_high": 2,
-        "opex_score_1_low_5_high": 2,
-        "product_value_score_1_low_5_high": 3,
-        "feedstock_tolerance_score_1_low_5_high": 2,
-        "product_quality_score_1_low_5_high": 3,
-        "ghg_risk_score_1_low_5_high": 1,
-        "pollution_risk_score_1_low_5_high": 2,
-        "suitable_feedstock": "Clean, sorted PET/HDPE/LDPE/PP/PS",
-        "main_output": "Plastic flakes or pellets",
-        "limitations": "Needs clean sorting; quality decreases after repeated recycling.",
-        "egypt_relevance": "High relevance for Egypt because manual sorting and local recycling already exist."
+        "Method": "Mechanical Recycling",
+        "Favorite Plastic Type": "PET, HDPE, PP - clean and sorted",
+        "Efficiency (%)": 88,
+        "CO2e/kg waste GWP": 0.35,
+        "Power MJ/kg waste CED": 2.5,
+        "Cost EGP/kg input": 8,
+        "Clean Score": 9,
+        "Egypt Suitability": "Very High",
+        "Reason": "Best for clean sorted plastics; low energy and lowest emissions."
     },
     {
-        "method": "Chemical recycling",
-        "efficiency_min_percent": 65,
-        "efficiency_max_percent": 85,
-        "energy_intensity_score_1_low_5_high": 4,
-        "capex_score_1_low_5_high": 5,
-        "opex_score_1_low_5_high": 5,
-        "product_value_score_1_low_5_high": 5,
-        "feedstock_tolerance_score_1_low_5_high": 3,
-        "product_quality_score_1_low_5_high": 5,
-        "ghg_risk_score_1_low_5_high": 3,
-        "pollution_risk_score_1_low_5_high": 3,
-        "suitable_feedstock": "PET, engineering plastics, selected contaminated streams",
-        "main_output": "Monomers and chemical feedstock",
-        "limitations": "High cost, catalysts, solvents, complex operation.",
-        "egypt_relevance": "Potential future option for high-value PET and industrial plastic waste."
+        "Method": "Chemical Recycling",
+        "Favorite Plastic Type": "PET, selected engineering plastics",
+        "Efficiency (%)": 75,
+        "CO2e/kg waste GWP": 1.8,
+        "Power MJ/kg waste CED": 15,
+        "Cost EGP/kg input": 22,
+        "Clean Score": 6,
+        "Egypt Suitability": "Medium",
+        "Reason": "Good product quality but expensive and technically complex."
     },
     {
-        "method": "Thermal recycling",
-        "efficiency_min_percent": 70,
-        "efficiency_max_percent": 85,
-        "energy_intensity_score_1_low_5_high": 5,
-        "capex_score_1_low_5_high": 4,
-        "opex_score_1_low_5_high": 4,
-        "product_value_score_1_low_5_high": 4,
-        "feedstock_tolerance_score_1_low_5_high": 5,
-        "product_quality_score_1_low_5_high": 4,
-        "ghg_risk_score_1_low_5_high": 5,
-        "pollution_risk_score_1_low_5_high": 5,
-        "suitable_feedstock": "Mixed or contaminated plastic waste, PE/PP/PS-rich streams",
-        "main_output": "Pyrolysis oil, syngas, heat/energy, char",
-        "limitations": "High temperature, high energy demand, emissions risk.",
-        "egypt_relevance": "Useful for mixed waste that cannot be mechanically recycled."
+        "Method": "Thermal Recycling",
+        "Favorite Plastic Type": "Mixed PE, PP, PS contaminated waste",
+        "Efficiency (%)": 78,
+        "CO2e/kg waste GWP": 3.2,
+        "Power MJ/kg waste CED": 25,
+        "Cost EGP/kg input": 18,
+        "Clean Score": 4,
+        "Egypt Suitability": "Medium-High",
+        "Reason": "Useful for mixed waste but has higher energy and emissions risk."
     }
 ])
 
-df["avg_efficiency_percent"] = (
-    df["efficiency_min_percent"] + df["efficiency_max_percent"]
-) / 2
+# -----------------------------
+# Dashboard Title
+# -----------------------------
 
-st.title("♻️ Technical Comparison of Plastic Recycling Technologies in Egypt")
-st.caption("Mechanical vs Chemical vs Thermal recycling")
+st.title("♻️ Environmental and Economic Comparison of Plastic Recycling Methods in Egypt")
+st.caption("Mechanical vs Chemical vs Thermal Recycling | Egypt-focused technical dashboard")
 
-st.sidebar.header("Scenario Inputs")
+st.markdown("""
+This dashboard compares the three main plastic recycling methods using indicators relevant to Egypt:
 
-waste_tons = st.sidebar.number_input(
-    "Plastic waste input (tons/year)",
+- Favorite plastic type to use
+- Efficiency
+- CO₂e/kg waste as GWP
+- Power MJ/kg waste as CED
+- Cost in Egyptian Pound/kg input
+- Cleanliness / environmental preference score
+""")
+
+# -----------------------------
+# Sidebar
+# -----------------------------
+
+st.sidebar.header("Scenario Control")
+
+selected_methods = st.sidebar.multiselect(
+    "Choose methods to compare",
+    options=df["Method"].tolist(),
+    default=df["Method"].tolist()
+)
+
+waste_input = st.sidebar.number_input(
+    "Plastic waste input (kg)",
     min_value=100,
     max_value=10_000_000,
     value=10000,
     step=100
 )
 
-selected_methods = st.sidebar.multiselect(
-    "Select recycling methods",
-    options=df["method"].tolist(),
-    default=df["method"].tolist()
+filtered = df[df["Method"].isin(selected_methods)].copy()
+
+if filtered.empty:
+    st.error("Please select at least one recycling method.")
+    st.stop()
+
+filtered["Recovered Output (kg)"] = waste_input * filtered["Efficiency (%)"] / 100
+filtered["Total CO2e (kg)"] = waste_input * filtered["CO2e/kg waste GWP"]
+filtered["Total Power CED (MJ)"] = waste_input * filtered["Power MJ/kg waste CED"]
+filtered["Total Cost (EGP)"] = waste_input * filtered["Cost EGP/kg input"]
+
+# -----------------------------
+# KPIs
+# -----------------------------
+
+st.header("1. Scenario Summary")
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("Waste Input", f"{waste_input:,.0f} kg")
+col2.metric("Best Efficiency", f"{filtered['Efficiency (%)'].max():.0f}%")
+col3.metric("Lowest CO₂e", f"{filtered['CO2e/kg waste GWP'].min():.2f} kg/kg")
+col4.metric("Lowest Cost", f"{filtered['Cost EGP/kg input'].min():.0f} EGP/kg")
+
+# -----------------------------
+# Main Comparison Table
+# -----------------------------
+
+st.header("2. Main Technical Comparison")
+
+comparison_table = filtered[
+    [
+        "Method",
+        "Favorite Plastic Type",
+        "Efficiency (%)",
+        "CO2e/kg waste GWP",
+        "Power MJ/kg waste CED",
+        "Cost EGP/kg input",
+        "Clean Score",
+        "Egypt Suitability",
+        "Reason"
+    ]
+]
+
+st.dataframe(comparison_table, use_container_width=True)
+
+# -----------------------------
+# Charts
+# -----------------------------
+
+st.header("3. Efficiency Comparison")
+
+fig_eff = px.bar(
+    filtered,
+    x="Method",
+    y="Efficiency (%)",
+    text="Efficiency (%)",
+    title="Recycling Efficiency (%)"
+)
+fig_eff.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+st.plotly_chart(fig_eff, use_container_width=True)
+
+st.header("4. Environmental Effects")
+
+fig_gwp = px.bar(
+    filtered,
+    x="Method",
+    y="CO2e/kg waste GWP",
+    text="CO2e/kg waste GWP",
+    title="Global Warming Potential - CO₂e/kg Waste"
+)
+fig_gwp.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+st.plotly_chart(fig_gwp, use_container_width=True)
+
+fig_ced = px.bar(
+    filtered,
+    x="Method",
+    y="Power MJ/kg waste CED",
+    text="Power MJ/kg waste CED",
+    title="Cumulative Energy Demand - MJ/kg Waste"
+)
+fig_ced.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+st.plotly_chart(fig_ced, use_container_width=True)
+
+st.header("5. Economic Effects")
+
+fig_cost = px.bar(
+    filtered,
+    x="Method",
+    y="Cost EGP/kg input",
+    text="Cost EGP/kg input",
+    title="Estimated Treatment Cost - EGP/kg Input"
+)
+fig_cost.update_traces(texttemplate="%{text:.0f}", textposition="outside")
+st.plotly_chart(fig_cost, use_container_width=True)
+
+# -----------------------------
+# Cleanest Method
+# -----------------------------
+
+st.header("6. Cleanest Method Ranking")
+
+ranking = filtered.sort_values(
+    by=["Clean Score", "CO2e/kg waste GWP", "Power MJ/kg waste CED", "Cost EGP/kg input"],
+    ascending=[False, True, True, True]
 )
 
-filtered = df[df["method"].isin(selected_methods)].copy()
-filtered["estimated_output_tons_per_year"] = (
-    waste_tons * filtered["avg_efficiency_percent"] / 100
+fig_clean = px.bar(
+    ranking,
+    x="Method",
+    y="Clean Score",
+    text="Clean Score",
+    title="Clean Score Ranking - 10 = Cleanest"
+)
+fig_clean.update_traces(texttemplate="%{text:.0f}/10", textposition="outside")
+st.plotly_chart(fig_clean, use_container_width=True)
+
+best_method = ranking.iloc[0]
+
+st.success(
+    f"Recommended cleanest option: {best_method['Method']} "
+    f"for {best_method['Favorite Plastic Type']}."
 )
 
-st.header("1. Egypt Waste Context")
-st.write(
-    """
-    This dashboard compares the three main plastic recycling methods under the Egyptian
-    waste-management context. It helps users compare technical performance,
-    environmental effects, economic indicators, and expected recycled output.
-    """
-)
+# -----------------------------
+# Scenario Calculations
+# -----------------------------
 
-col1, col2, col3 = st.columns(3)
+st.header("7. Scenario Calculation Results")
 
-col1.metric("Plastic waste input", f"{waste_tons:,.0f} tons/year")
-col2.metric("Methods compared", len(filtered))
+scenario_table = filtered[
+    [
+        "Method",
+        "Recovered Output (kg)",
+        "Total CO2e (kg)",
+        "Total Power CED (MJ)",
+        "Total Cost (EGP)"
+    ]
+].copy()
 
-if len(filtered) > 0:
-    col3.metric("Highest average efficiency", f"{filtered['avg_efficiency_percent'].max():.0f}%")
-else:
-    col3.metric("Highest average efficiency", "N/A")
+scenario_table["Recovered Output (kg)"] = scenario_table["Recovered Output (kg)"].round(0)
+scenario_table["Total CO2e (kg)"] = scenario_table["Total CO2e (kg)"].round(2)
+scenario_table["Total Power CED (MJ)"] = scenario_table["Total Power CED (MJ)"].round(2)
+scenario_table["Total Cost (EGP)"] = scenario_table["Total Cost (EGP)"].round(2)
 
-st.header("2. Technical Performance")
+st.dataframe(scenario_table, use_container_width=True)
 
-if len(filtered) > 0:
-    fig_eff = px.bar(
-        filtered,
-        x="method",
-        y="avg_efficiency_percent",
-        text="avg_efficiency_percent",
-        title="Average Process Efficiency (%)"
-    )
-    fig_eff.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-    st.plotly_chart(fig_eff, use_container_width=True)
+# -----------------------------
+# Recommendation Text
+# -----------------------------
 
-    technical_data = filtered.melt(
-        id_vars=["method"],
-        value_vars=[
-            "energy_intensity_score_1_low_5_high",
-            "feedstock_tolerance_score_1_low_5_high",
-            "product_quality_score_1_low_5_high",
-            "product_value_score_1_low_5_high"
-        ],
-        var_name="indicator",
-        value_name="score"
-    )
+st.header("8. Engineering Recommendation for Egypt")
 
-    fig_tech = px.bar(
-        technical_data,
-        x="method",
-        y="score",
-        color="indicator",
-        barmode="group",
-        title="Technical Scores: 1 = Low, 5 = High"
-    )
-    st.plotly_chart(fig_tech, use_container_width=True)
+st.markdown("""
+### Recommended pathway
 
-    st.header("3. Environmental Effects")
+**Mechanical recycling** is the cleanest and most suitable method when the plastic waste is clean and sorted, especially PET, HDPE, and PP.  
+It has the highest efficiency, lowest CO₂e impact, lowest energy demand, and lowest estimated cost.
 
-    environmental_data = filtered.melt(
-        id_vars=["method"],
-        value_vars=[
-            "energy_intensity_score_1_low_5_high",
-            "ghg_risk_score_1_low_5_high",
-            "pollution_risk_score_1_low_5_high"
-        ],
-        var_name="environmental_indicator",
-        value_name="risk_score"
-    )
+**Chemical recycling** is useful when the target is high-quality monomer or chemical feedstock recovery, especially for PET.  
+However, it is more expensive and needs advanced technical operation.
 
-    fig_env = px.bar(
-        environmental_data,
-        x="method",
-        y="risk_score",
-        color="environmental_indicator",
-        barmode="group",
-        title="Environmental Risk Scores: 1 = Low Risk, 5 = High Risk"
-    )
-    st.plotly_chart(fig_env, use_container_width=True)
+**Thermal recycling** is suitable for mixed or contaminated plastic waste that cannot be mechanically recycled.  
+However, it has the highest environmental risk because it requires high energy and may produce emissions if emission-control systems are weak.
+""")
 
-    st.header("4. Economic Effects")
+# -----------------------------
+# Sources Section
+# -----------------------------
 
-    economic_data = filtered.melt(
-        id_vars=["method"],
-        value_vars=[
-            "capex_score_1_low_5_high",
-            "opex_score_1_low_5_high",
-            "product_value_score_1_low_5_high"
-        ],
-        var_name="economic_indicator",
-        value_name="score"
-    )
+st.header("9. Data Sources and Assumptions")
 
-    fig_econ = px.bar(
-        economic_data,
-        x="method",
-        y="score",
-        color="economic_indicator",
-        barmode="group",
-        title="Economic Scores: 1 = Low, 5 = High"
-    )
-    st.plotly_chart(fig_econ, use_container_width=True)
+st.markdown("""
+The dashboard uses a screening-level dataset prepared for educational and technical comparison.
 
-    st.header("5. Scenario Output")
+**Egypt context sources:**
+- EEAA State of Environment Report.
+- EEAA solid-waste and environmental reporting.
+- UNIDO Plastic Value Chain in Egypt.
+- Egypt circular economy and plastic waste literature.
 
-    scenario = filtered[
-        [
-            "method",
-            "suitable_feedstock",
-            "avg_efficiency_percent",
-            "estimated_output_tons_per_year",
-            "main_output",
-            "limitations",
-            "egypt_relevance"
-        ]
-    ].copy()
-
-    scenario["estimated_output_tons_per_year"] = scenario[
-        "estimated_output_tons_per_year"
-    ].round(0)
-
-    st.dataframe(scenario, use_container_width=True)
-
-    st.header("6. Engineering Recommendation")
-
-    st.success(
-        "Mechanical recycling is recommended for clean and well-sorted PET, HDPE, LDPE, PP, and PS streams because it has high efficiency and low energy demand."
-    )
-
-    st.info(
-        "Chemical recycling is recommended when the goal is to recover high-value monomers or chemical feedstock, but it requires higher investment and more complex operation."
-    )
-
-    st.warning(
-        "Thermal recycling is useful for mixed or contaminated plastic waste, but it requires strict emission-control systems because of higher greenhouse-gas and pollution risks."
-    )
-
-    st.header("7. Full Data Table")
-    st.dataframe(filtered, use_container_width=True)
-
-else:
-    st.error("Please select at least one recycling method from the sidebar.")
+**Important note:**  
+EEAA sources are useful for Egypt waste context, plastic-waste management, and national environmental conditions.  
+However, detailed LCA indicators such as exact **CO₂e/kg waste GWP**, **MJ/kg waste CED**, and **EGP/kg treatment cost** are not usually provided directly as one ready datasheet.  
+Therefore, the numerical values in this dashboard are comparative engineering assumptions and should be updated if a detailed Egyptian LCA dataset becomes available.
+""")
