@@ -44,6 +44,7 @@ df = pd.DataFrame([
     }
 ])
 
+# Sidebar only for navigation
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Select Page",
@@ -54,21 +55,25 @@ if page == "Dashboard":
     st.title("♻️ Environmental and Economic Comparison of Plastic Recycling Methods in Egypt")
     st.caption("Mechanical vs Chemical vs Thermal Recycling | Egypt-focused technical dashboard")
 
-    st.sidebar.header("Dashboard Inputs")
+    st.markdown("## Dashboard Inputs")
 
-    selected_methods = st.sidebar.multiselect(
-        "Choose recycling methods to compare:",
-        options=df["Method"].tolist(),
-        default=df["Method"].tolist()
-    )
+    input_col1, input_col2 = st.columns([2, 1])
 
-    waste_input = st.sidebar.number_input(
-        "Plastic waste input (kg):",
-        min_value=100,
-        max_value=10_000_000,
-        value=10000,
-        step=100
-    )
+    with input_col1:
+        selected_methods = st.multiselect(
+            "Choose recycling methods to compare:",
+            options=df["Method"].tolist(),
+            default=df["Method"].tolist()
+        )
+
+    with input_col2:
+        waste_input = st.number_input(
+            "Plastic waste input (kg):",
+            min_value=100,
+            max_value=10_000_000,
+            value=10000,
+            step=100
+        )
 
     filtered = df[df["Method"].isin(selected_methods)].copy()
 
