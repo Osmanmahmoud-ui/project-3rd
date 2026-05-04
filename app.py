@@ -80,13 +80,6 @@ df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
 # Market Research Data
 # -------------------------------------------------------
 
-global_waste_fate = pd.DataFrame([
-    {"Waste Fate": "Landfills", "Share (%)": 50},
-    {"Waste Fate": "Mismanaged / Open Dumping", "Share (%)": 22},
-    {"Waste Fate": "Incineration", "Share (%)": 19},
-    {"Waste Fate": "Recycled", "Share (%)": 9}
-])
-
 market_evolution = pd.DataFrame([
     {"Feature": "Model", "Pre-2023": "Linear", "2026": "Circular"},
     {"Feature": "Technology", "Pre-2023": "Manual + grinding", "2026": "Integrated systems"},
@@ -498,7 +491,7 @@ if page == "Dashboard":
 
 elif page == "Market Research":
     st.title("🌍 Comprehensive Plastic Recycling Market Research")
-    st.caption("Interactive market research page with section-based navigation, inputs, charts, and visuals")
+    st.caption("Interactive market research page with section-based navigation, charts, and visuals")
 
     st.markdown("## Choose Market Research Section")
 
@@ -528,41 +521,42 @@ elif page == "Market Research":
 
         st.markdown("""
         The global plastic system is undergoing a transition toward a circular economy.
-        This section allows you to explore global plastic waste generation and waste fate distribution.
+        This section presents the default global market values as fixed reference information,
+        based on international plastic-waste reports.
         """)
 
-        col_input1, col_input2 = st.columns(2)
+        annual_waste = 400
+        projected_waste = 1100
 
-        with col_input1:
-            annual_waste = st.number_input(
-                "Annual global plastic waste generation in 2026 (million tons/year)",
-                min_value=100.0,
-                max_value=1000.0,
-                value=400.0,
-                step=10.0
-            )
+        landfill = 50
+        mismanaged = 22
+        incinerated = 19
+        recycled = 9
 
-        with col_input2:
-            projected_waste = st.number_input(
-                "Projected global plastic waste by 2050 (million tons/year)",
-                min_value=400.0,
-                max_value=2000.0,
-                value=1100.0,
-                step=50.0
-            )
+        st.subheader("Key Global Plastic Waste Indicators")
 
-        landfill = st.slider("Landfilled waste share (%)", 0, 100, 50)
-        mismanaged = st.slider("Mismanaged / open dumping share (%)", 0, 100, 22)
-        incinerated = st.slider("Incinerated waste share (%)", 0, 100, 19)
-        recycled = st.slider("Recycled waste share (%)", 0, 100, 9)
+        col1, col2, col3 = st.columns(3)
 
-        total_share = landfill + mismanaged + incinerated + recycled
+        col1.metric(
+            "Annual Plastic Waste Generation",
+            f"{annual_waste}M tons/year"
+        )
 
-        if total_share != 100:
-            st.warning(
-                f"The selected shares add up to {total_share}%. "
-                "For a balanced waste-fate model, they should equal 100%."
-            )
+        col2.metric(
+            "Projected Plastic Waste by 2050",
+            f"{projected_waste}M tons/year"
+        )
+
+        col3.metric(
+            "Effective Recycling Rate",
+            f"{recycled}%"
+        )
+
+        st.info("""
+        Global plastic waste generation is currently estimated at around **400 million tons per year**.
+        If current production and disposal trends continue, this could increase to around
+        **1.1 billion tons per year by 2050**.
+        """)
 
         waste_fate_custom = pd.DataFrame([
             {
@@ -587,52 +581,89 @@ elif page == "Market Research":
             }
         ])
 
-        col1, col2, col3 = st.columns(3)
+        st.subheader("Global Plastic Waste Fate Distribution")
 
-        col1.metric("Current Waste", f"{annual_waste:,.0f}M tons/year")
-        col2.metric("2050 Projection", f"{projected_waste:,.0f}M tons/year")
-        col3.metric("Circularity Gap", f"{100 - recycled:.0f}% not recycled")
+        fig_pie = px.pie(
+            waste_fate_custom,
+            names="Waste Fate",
+            values="Share (%)",
+            title="Global Plastic Waste Fate Share (%)"
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
 
-        show_pie = st.checkbox("Show waste fate pie chart", value=True)
-        show_bar = st.checkbox("Show waste amount bar chart", value=True)
-        show_projection = st.checkbox("Show 2026 to 2050 projection chart", value=True)
+        fig_amount = px.bar(
+            waste_fate_custom,
+            x="Waste Fate",
+            y="Amount (million tons/year)",
+            text="Amount (million tons/year)",
+            title="Estimated Plastic Waste Amount by Fate"
+        )
+        fig_amount.update_traces(
+            texttemplate="%{text:.1f}M tons",
+            textposition="outside"
+        )
+        st.plotly_chart(fig_amount, use_container_width=True)
 
-        if show_pie:
-            fig_pie = px.pie(
-                waste_fate_custom,
-                names="Waste Fate",
-                values="Share (%)",
-                title="Global Plastic Waste Fate Distribution"
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
+        st.subheader("Plastic Waste Growth Projection")
 
-        if show_bar:
-            fig_amount = px.bar(
-                waste_fate_custom,
-                x="Waste Fate",
-                y="Amount (million tons/year)",
-                text="Amount (million tons/year)",
-                title="Estimated Plastic Waste Amount by Fate"
-            )
-            fig_amount.update_traces(texttemplate="%{text:.1f}M", textposition="outside")
-            st.plotly_chart(fig_amount, use_container_width=True)
+        projection_df = pd.DataFrame([
+            {
+                "Year": 2026,
+                "Plastic Waste (million tons/year)": annual_waste
+            },
+            {
+                "Year": 2050,
+                "Plastic Waste (million tons/year)": projected_waste
+            }
+        ])
 
-        if show_projection:
-            projection_df = pd.DataFrame([
-                {"Year": 2026, "Plastic Waste (million tons/year)": annual_waste},
-                {"Year": 2050, "Plastic Waste (million tons/year)": projected_waste}
-            ])
+        fig_projection = px.line(
+            projection_df,
+            x="Year",
+            y="Plastic Waste (million tons/year)",
+            markers=True,
+            title="Projected Growth of Global Plastic Waste"
+        )
+        st.plotly_chart(fig_projection, use_container_width=True)
 
-            fig_projection = px.line(
-                projection_df,
-                x="Year",
-                y="Plastic Waste (million tons/year)",
-                markers=True,
-                title="Plastic Waste Growth Projection"
-            )
-            st.plotly_chart(fig_projection, use_container_width=True)
+        st.subheader("Circularity Gap")
 
-        st.info("Key Insight: More than 90% of global plastic waste is not effectively recycled under the baseline assumptions.")
+        circularity_df = pd.DataFrame([
+            {
+                "Category": "Recycled",
+                "Share (%)": recycled
+            },
+            {
+                "Category": "Not Effectively Recycled",
+                "Share (%)": 100 - recycled
+            }
+        ])
+
+        fig_gap = px.bar(
+            circularity_df,
+            x="Category",
+            y="Share (%)",
+            text="Share (%)",
+            title="Global Circularity Gap in Plastic Waste Management"
+        )
+        fig_gap.update_traces(
+            texttemplate="%{text:.0f}%",
+            textposition="outside"
+        )
+        st.plotly_chart(fig_gap, use_container_width=True)
+
+        st.warning("""
+        **Key Insight:**  
+        Despite the availability of recycling technologies, around **91% of global plastic waste**
+        is still not effectively recycled. This creates a major circularity gap and explains why
+        mechanical, chemical, and thermal recycling technologies are increasingly important.
+        """)
+
+        st.caption("""
+        Source basis: OECD Global Plastics Outlook (2022), UNEP plastic pollution reports,
+        and circular-economy literature. Values are used as fixed market-reference indicators
+        for dashboard visualization.
+        """)
 
     # ---------------------------------------------------
     # Section 2: Egypt Market Analysis
@@ -927,8 +958,6 @@ elif page == "Market Research":
             f"{market_2_data['Policy Strength']}/10"
         )
 
-        st.subheader("2. Basic Market Size and Recycling Comparison")
-
         show_market_size = st.checkbox("Show plastic waste generation chart", value=True)
         show_recycling_rate = st.checkbox("Show recycling rate chart", value=True)
         show_technology_maturity = st.checkbox("Show technology maturity chart", value=True)
@@ -965,7 +994,7 @@ elif page == "Market Research":
             st.plotly_chart(recycling_chart, use_container_width=True)
 
         if show_technology_maturity:
-            st.subheader("3. Technology Maturity Comparison")
+            st.subheader("Technology Maturity Comparison")
 
             technology_maturity = selected_markets_df.melt(
                 id_vars=["Market"],
@@ -990,7 +1019,7 @@ elif page == "Market Research":
             st.plotly_chart(technology_chart, use_container_width=True)
 
         if show_radar:
-            st.subheader("4. Market Readiness Radar Chart")
+            st.subheader("Market Readiness Radar Chart")
 
             fig_radar = go.Figure()
 
@@ -1028,7 +1057,7 @@ elif page == "Market Research":
             st.plotly_chart(fig_radar, use_container_width=True)
 
         if show_informal:
-            st.subheader("5. Informal Sector Role")
+            st.subheader("Informal Sector Role")
 
             informal_chart = px.bar(
                 selected_markets_df,
@@ -1044,7 +1073,7 @@ elif page == "Market Research":
             st.plotly_chart(informal_chart, use_container_width=True)
 
         if show_table:
-            st.subheader("6. Strategic Comparison Table")
+            st.subheader("Strategic Comparison Table")
 
             comparison_table = selected_markets_df[
                 [
@@ -1065,7 +1094,7 @@ elif page == "Market Research":
 
             st.dataframe(comparison_table, use_container_width=True)
 
-        st.subheader("7. Interpretation")
+        st.subheader("Interpretation")
 
         recycling_gap = market_2_data["Recycling Rate (%)"] - market_1_data["Recycling Rate (%)"]
         sorting_gap = market_2_data["Sorting Automation"] - market_1_data["Sorting Automation"]
