@@ -10,12 +10,12 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------
-# Currency Conversion
+# Currency
 # -------------------------------------------------------
 EUR_TO_EGP = 62.669
 
 # -------------------------------------------------------
-# Dashboard Dataset (UNCHANGED)
+# DASHBOARD DATA (UNCHANGED)
 # -------------------------------------------------------
 df = pd.DataFrame([
     {
@@ -29,7 +29,6 @@ df = pd.DataFrame([
         "Net CED MJ/kg": -18.14,
         "Net Cost EUR/kg": -0.16,
         "Clean Score": 9,
-        "Egypt Suitability": "Very High",
     },
     {
         "Method": "Chemical Recycling - Pyrolysis",
@@ -42,7 +41,6 @@ df = pd.DataFrame([
         "Net CED MJ/kg": -15.92,
         "Net Cost EUR/kg": -0.24,
         "Clean Score": 6,
-        "Egypt Suitability": "Medium",
     },
     {
         "Method": "Hybrid Mechanical + Chemical",
@@ -55,7 +53,6 @@ df = pd.DataFrame([
         "Net CED MJ/kg": -30.14,
         "Net Cost EUR/kg": -0.29,
         "Clean Score": 10,
-        "Egypt Suitability": "High",
     }
 ])
 
@@ -66,14 +63,14 @@ df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
 # MARKET DATA (EXPANDED)
 # -------------------------------------------------------
 market = pd.DataFrame([
-    {"Market": "Egypt", "Waste": 5.4, "Recycling": 12, "Mech": 7, "Chem": 3, "Therm": 4, "Sort": 4, "Policy": 5, "Conf": "High"},
-    {"Market": "EU", "Waste": 30, "Recycling": 35, "Mech": 8, "Chem": 7, "Therm": 6, "Sort": 9, "Policy": 9, "Conf": "High"},
-    {"Market": "Germany", "Waste": 6, "Recycling": 38, "Mech": 9, "Chem": 7, "Therm": 7, "Sort": 9, "Policy": 9, "Conf": "High"},
-    {"Market": "Japan", "Waste": 8, "Recycling": 25, "Mech": 7, "Chem": 7, "Therm": 8, "Sort": 8, "Policy": 8, "Conf": "High"},
-    {"Market": "USA", "Waste": 40, "Recycling": 9, "Mech": 6, "Chem": 6, "Therm": 5, "Sort": 6, "Policy": 5, "Conf": "Medium"},
-    {"Market": "China", "Waste": 60, "Recycling": 20, "Mech": 7, "Chem": 6, "Therm": 6, "Sort": 6, "Policy": 7, "Conf": "Medium"},
-    {"Market": "UAE", "Waste": 1.5, "Recycling": 15, "Mech": 6, "Chem": 5, "Therm": 6, "Sort": 6, "Policy": 7, "Conf": "Medium"},
-    {"Market": "Global", "Waste": 400, "Recycling": 9, "Mech": 5, "Chem": 4, "Therm": 5, "Sort": 4, "Policy": 4, "Conf": "Low"},
+    {"Market": "Egypt", "Recycling": 12, "Mech": 7, "Chem": 3, "Therm": 4, "Sort": 4, "Policy": 5, "Conf": "High"},
+    {"Market": "EU", "Recycling": 35, "Mech": 8, "Chem": 7, "Therm": 6, "Sort": 9, "Policy": 9, "Conf": "High"},
+    {"Market": "Germany", "Recycling": 38, "Mech": 9, "Chem": 7, "Therm": 7, "Sort": 9, "Policy": 9, "Conf": "High"},
+    {"Market": "Japan", "Recycling": 25, "Mech": 7, "Chem": 7, "Therm": 8, "Sort": 8, "Policy": 8, "Conf": "High"},
+    {"Market": "USA", "Recycling": 9, "Mech": 6, "Chem": 6, "Therm": 5, "Sort": 6, "Policy": 5, "Conf": "Medium"},
+    {"Market": "China", "Recycling": 20, "Mech": 7, "Chem": 6, "Therm": 6, "Sort": 6, "Policy": 7, "Conf": "Medium"},
+    {"Market": "UAE", "Recycling": 15, "Mech": 6, "Chem": 5, "Therm": 6, "Sort": 6, "Policy": 7, "Conf": "Medium"},
+    {"Market": "Global", "Recycling": 9, "Mech": 5, "Chem": 4, "Therm": 5, "Sort": 4, "Policy": 4, "Conf": "Low"},
 ])
 
 # -------------------------------------------------------
@@ -99,11 +96,11 @@ if page == "Dashboard":
     st.plotly_chart(px.bar(df, x="Method", y="Cost"))
 
 # -------------------------------------------------------
-# 🏆 MARKET ENGINE (JURY VERSION)
+# 🏆 MARKET ENGINE (SAFE + JURY VERSION)
 # -------------------------------------------------------
 else:
 
-    st.title("🌍 Circular Economy Jury Decision Engine")
+    st.title("🌍 Circular Economy Jury Engine")
 
     c1, c2 = st.columns(2)
 
@@ -113,13 +110,26 @@ else:
     with c2:
         m2 = st.selectbox("Market 2", market["Market"])
 
+    # ---------------------------------------------------
+    # SAFETY CHECK (FIXES YOUR ERROR)
+    # ---------------------------------------------------
+    if m1 == m2:
+        st.error("❌ Please select TWO DIFFERENT markets.")
+        st.stop()
+
     sel = market[market["Market"].isin([m1, m2])].copy()
 
-    # ---------------- KPI ----------------
-    st.subheader("📊 KPIs")
+    if len(sel) < 2:
+        st.error("❌ Comparison requires two markets.")
+        st.stop()
 
     a = sel.iloc[0]
     b = sel.iloc[1]
+
+    # ---------------------------------------------------
+    # KPIs
+    # ---------------------------------------------------
+    st.subheader("📊 KPIs")
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -128,14 +138,16 @@ else:
     c3.metric("Sorting Gap", f"{b['Sort'] - a['Sort']:+}")
     c4.metric("Policy Gap", f"{b['Policy'] - a['Policy']:+}")
 
-    # ---------------- INDEX ----------------
-    sel["Index"] = (
+    # ---------------------------------------------------
+    # NORMALIZED SCORE
+    # ---------------------------------------------------
+    sel["Score"] = (
         sel["Recycling"] * 0.4 +
         sel["Sort"] * 6 +
         sel["Policy"] * 6
     )
 
-    sel["Normalized Score"] = (
+    sel["Normalized"] = (
         sel["Recycling"] / 40 * 35 +
         sel["Sort"] / 10 * 30 +
         sel["Policy"] / 10 * 35
@@ -143,13 +155,15 @@ else:
 
     st.subheader("🏁 Jury Score")
 
-    st.plotly_chart(px.bar(sel, x="Market", y="Normalized Score", text="Normalized Score"))
+    st.plotly_chart(px.bar(sel, x="Market", y="Normalized", text="Normalized"))
 
-    winner = sel.sort_values("Normalized Score", ascending=False).iloc[0]
+    winner = sel.sort_values("Normalized", ascending=False).iloc[0]
 
-    st.success(f"🏆 WINNER: {winner['Market']} ({winner['Normalized Score']:.1f}/100)")
+    st.success(f"🏆 Winner: {winner['Market']} ({winner['Normalized']:.1f}/100)")
 
-    # ---------------- RADAR ----------------
+    # ---------------------------------------------------
+    # RADAR
+    # ---------------------------------------------------
     st.subheader("🧭 System Radar")
 
     fig = go.Figure()
@@ -164,7 +178,20 @@ else:
 
     st.plotly_chart(fig)
 
-    # ---------------- CONFIDENCE ----------------
+    # ---------------------------------------------------
+    # GAP ANALYSIS
+    # ---------------------------------------------------
+    st.subheader("📉 Gap Analysis")
+
+    st.info(f"""
+    Recycling Gap: {b['Recycling'] - a['Recycling']}%
+    Sorting Gap: {b['Sort'] - a['Sort']}
+    Policy Gap: {b['Policy'] - a['Policy']}
+    """)
+
+    # ---------------------------------------------------
+    # CONFIDENCE
+    # ---------------------------------------------------
     st.subheader("🔍 Data Confidence")
 
     conf_map = {"High": 3, "Medium": 2, "Low": 1}
@@ -174,62 +201,59 @@ else:
         x="Market",
         y=sel["Conf"].map(conf_map),
         text="Conf",
-        title="Data Reliability"
+        title="Data Reliability Level"
     ))
 
-    # ---------------- GAP ----------------
-    st.subheader("📉 Gap Analysis")
-
-    st.info(f"""
-    Recycling Gap: {b['Recycling'] - a['Recycling']}%
-    Sorting Gap: {b['Sort'] - a['Sort']}
-    Policy Gap: {b['Policy'] - a['Policy']}
-    """)
-
-    # ---------------- INTERPRETATION ----------------
-    st.subheader("🧠 Jury Interpretation")
+    # ---------------------------------------------------
+    # INSIGHT
+    # ---------------------------------------------------
+    st.subheader("🧠 Jury Insight")
 
     st.warning("""
-    Recycling performance is not driven by technology alone.
-
-    Key drivers:
-    - Policy enforcement
-    - Sorting automation
-    - System integration
+    Market leadership is driven by system integration:
+    - Policy strength
+    - Sorting efficiency
+    - Recycling capacity
     """)
 
-    # ---------------- RECOMMENDATIONS ----------------
+    # ---------------------------------------------------
+    # RECOMMENDATIONS
+    # ---------------------------------------------------
     st.subheader("🎯 Strategy")
 
     if a["Sort"] < b["Sort"]:
-        st.write("✔ Upgrade sorting systems")
+        st.write("✔ Improve sorting systems")
 
     if a["Policy"] < b["Policy"]:
-        st.write("✔ Strengthen regulation")
+        st.write("✔ Strengthen policy")
 
     if a["Recycling"] < b["Recycling"]:
         st.write("✔ Increase recycling capacity")
 
-    # ---------------- EGYPT INSIGHT ----------------
+    # ---------------------------------------------------
+    # EGYPT NOTE
+    # ---------------------------------------------------
     if "Egypt" in [m1, m2]:
-        st.error("Egypt needs hybrid recycling + sorting + policy upgrade")
+        st.error("Egypt opportunity: hybrid recycling + policy + sorting upgrade")
 
-    # ---------------- REFERENCES ----------------
+    # ---------------------------------------------------
+    # REFERENCES
+    # ---------------------------------------------------
     st.subheader("📚 References")
 
     st.markdown("""
-    - OECD Global Plastics Outlook (2022)  
-    - UNEP Waste Reports  
-    - World Bank Waste 2.0  
-    - EU Circular Economy Action Plan  
-    - Volk et al. (2021) Recycling LCA study  
-    - EPA / JETRO / EEAA datasets  
+    OECD (2022) – Global Plastics Outlook  
+    UNEP – Waste Reports  
+    World Bank – What a Waste 2.0  
+    EU Circular Economy Action Plan  
+    Volk et al. (2021) – Recycling LCA study  
+    EPA / EEAA / JETRO datasets  
     """)
 
-    # ---------------- FINAL ----------------
+    # ---------------------------------------------------
+    # FINAL MESSAGE
+    # ---------------------------------------------------
     st.success(f"""
     🏆 Final Decision:
-    {winner['Market']} is the most circular and system-ready market.
-
-    Key reason: balanced policy + sorting + recycling integration.
+    {winner['Market']} leads due to balanced policy + sorting + recycling system integration.
     """)
