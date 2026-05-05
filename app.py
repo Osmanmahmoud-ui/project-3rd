@@ -103,9 +103,17 @@ else:
     st.title("🌍 Market vs Market Plastic Waste System Engine")
 
     st.markdown("""
-    This engine compares two markets in terms of plastic waste generation,
-    recycling performance, and system maturity.
+    This engine compares two countries based on plastic waste generation,
+    recycling system maturity, and circular economy performance.
     """)
+
+    st.divider()
+
+    # =====================================================
+    # MARKET SELECTION
+    # =====================================================
+    st.subheader("📍 Market Selection")
+    st.caption("Choose two markets to compare their waste management systems.")
 
     col1, col2 = st.columns(2)
 
@@ -124,11 +132,13 @@ else:
     a = sel.iloc[0]
     b = sel.iloc[1]
 
+    st.divider()
+
     # =====================================================
     # 1. RECYCLING SCALE
     # =====================================================
     st.subheader("🌍 Recycling Scale Comparison")
-    st.caption("Compares recycling rate between selected markets.")
+    st.caption("Compares total recycling performance between the two markets.")
 
     scale_df = pd.DataFrame([
         {"Market": m1, "Recycling Rate": a["Recycling"]},
@@ -138,15 +148,18 @@ else:
     st.plotly_chart(px.bar(scale_df, x="Market", y="Recycling Rate", text="Recycling Rate"))
 
     st.info("""
-    This shows how efficiently each market converts plastic waste into recycled material.
+    💡 Interpretation:
+    This metric shows how much plastic waste is successfully recycled.
     Higher values indicate stronger circular economy performance.
     """)
 
+    st.divider()
+
     # =====================================================
-    # 2. RADAR
+    # 2. SYSTEM RADAR
     # =====================================================
-    st.subheader("🧭 System Maturity Radar")
-    st.caption("Shows how developed each recycling system is across key dimensions.")
+    st.subheader("🧭 Recycling System Maturity Radar")
+    st.caption("Compares technological and institutional maturity of each market.")
 
     fig = go.Figure()
 
@@ -161,21 +174,24 @@ else:
     st.plotly_chart(fig)
 
     st.info("""
-    Radar interpretation:
-    - Mechanical → clean plastic recycling strength
-    - Chemical → advanced material recovery capability
-    - Thermal → mixed waste treatment dependency
-    - Sorting → collection efficiency
-    - Policy → regulatory strength
+    💡 How to read this radar:
 
-    Larger balanced shape = more advanced circular system.
+    - Mechanical → clean recycling capability  
+    - Chemical → advanced material recovery  
+    - Thermal → mixed waste treatment dependency  
+    - Sorting → collection efficiency  
+    - Policy → governance strength  
+
+    A larger balanced shape = more advanced circular system.
     """)
+
+    st.divider()
 
     # =====================================================
     # 3. GAP ANALYSIS
     # =====================================================
     st.subheader("📉 System Gap Analysis")
-    st.caption("Shows structural differences between markets.")
+    st.caption("Shows structural differences between the two markets.")
 
     st.info(f"""
     Recycling Gap: {b['Recycling'] - a['Recycling']}%
@@ -186,35 +202,42 @@ else:
     """)
 
     st.markdown("""
-    Interpretation:
-    - Recycling gap → overall system performance difference  
+    💡 Interpretation:
+    - Recycling gap → overall circularity difference  
     - Sorting gap → infrastructure efficiency difference  
-    - Policy gap → governance strength difference  
+    - Policy gap → regulatory strength difference  
     """)
+
+    st.divider()
 
     # =====================================================
     # 4. ENGINEERING INSIGHT
     # =====================================================
     st.subheader("🧠 Engineering Interpretation")
+    st.caption("Explains system-level meaning of the data.")
 
     if a["Sort"] < b["Sort"]:
-        st.write("✔ Market 2 has better sorting infrastructure")
+        st.write("✔ Market 2 has stronger sorting infrastructure")
 
     if a["Policy"] < b["Policy"]:
-        st.write("✔ Market 2 has stronger policy framework")
+        st.write("✔ Market 2 has stronger policy enforcement")
 
     if a["Recycling"] < b["Recycling"]:
         st.write("✔ Market 2 has higher recycling efficiency")
 
     st.info("""
-    Waste management performance depends on system integration:
-    not just technology, but also policy + sorting infrastructure.
+    💡 Key insight:
+    Waste performance is not driven only by technology,
+    but by system integration: policy + sorting + infrastructure.
     """)
+
+    st.divider()
 
     # =====================================================
     # 5. DATA CONFIDENCE
     # =====================================================
     st.subheader("🔍 Data Confidence Level")
+    st.caption("Indicates reliability of each market dataset.")
 
     conf_map = {"High": 3, "Medium": 2, "Low": 1}
 
@@ -226,17 +249,46 @@ else:
     ))
 
     st.info("""
-    Higher confidence means better data availability and more reliable national statistics.
+    💡 Meaning:
+    Higher confidence = more reliable national statistics and lower uncertainty.
     """)
+
+    st.divider()
 
     # =====================================================
     # 6. FINAL CONCLUSION
     # =====================================================
-    st.subheader("🏁 Final Conclusion")
+    st.subheader("🏁 Final System Conclusion")
 
     winner = sel.loc[sel["Recycling"].idxmax(), "Market"]
 
     st.success(f"""
-    Overall, {winner} demonstrates stronger circular economy performance
-    due to higher recycling efficiency and more developed system structure.
+    🏆 Final Result:
+    {winner} shows stronger circular economy performance due to better system maturity and recycling efficiency.
+    """)
+
+    st.divider()
+
+    # =====================================================
+    # 📚 REFERENCES SECTION (NEW)
+    # =====================================================
+    st.subheader("📚 References")
+
+    st.markdown("""
+    This analysis is based on international waste and circular economy datasets:
+
+    - OECD (2022) – Global Plastics Outlook  
+    - UNEP – Global Waste Management Reports  
+    - World Bank – What a Waste 2.0  
+    - European Commission – Circular Economy Action Plan  
+    - Volk et al. (2021) – Recycling pathway LCA study  
+    - International Energy Agency (IEA) – Plastics & Energy Reports  
+    - Egypt Environmental Affairs Agency (EEAA) – National Waste Context  
+
+    """)
+
+    st.info("""
+    💡 Note:
+    All metrics are standardized indicators for comparative system analysis
+    and are intended for academic and engineering decision-making purposes.
     """)
