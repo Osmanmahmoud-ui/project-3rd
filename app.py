@@ -404,17 +404,71 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
     st.write(f"{m2}: {future(b)}")
 
     st.markdown("---")
+    
+# ---------------------------------------------------
+# Section 8: References
+# ---------------------------------------------------
 
-    # =========================
-    # REFERENCES
-    # =========================
+elif section == "References":
 
-    st.subheader("📚 References")
+    st.header("📚 References for Market Research")
 
-    if st.checkbox("Show References"):
-        st.markdown("""
-- OECD (2022)
-- UNEP Circular Economy Framework
-- World Bank Waste Reports
-- Ellen MacArthur Foundation
+    st.markdown("""
+### 🌍 Global & Policy Sources
+
+1. OECD (2022) — *Global Plastics Outlook*  
+   ➜ Used for: global market benchmarking, recycling policy comparison, circular economy indicators (R & P)
+
+2. World Bank — *What a Waste 2.0*  
+   ➜ Used for: waste generation, sorting efficiency benchmarks, developing country system data (S)
+
+3. International Energy Agency (IEA) — Plastics & Recycling Reports  
+   ➜ Used for: energy use in recycling systems, thermal recovery insights (Therm)
+
+4. United Nations Environment Programme (UNEP) — Circular Economy Reports  
+   ➜ Used for: circular economy framework, policy strength, system structure (P)
+
+5. European Commission — Circular Economy Action Plan  
+   ➜ Used for: EU recycling targets, policy structure, system maturity comparison (P & R)
+
+---
+
+### 🏭 Technical & Academic Sources
+
+6. Volk et al. (2021) — *Journal of Industrial Ecology*  
+   ➜ Used for:  
+   - Environmental impact (GWP, CED)  
+   - Cost per kg plastic  
+   - Recycling pathway performance (Mechanical / Chemical / Hybrid) (M & C)
+
+7. Cairo University — Technical Assessment Reports (Plastic Waste Systems)  
+   ➜ Used for: Egypt-specific assumptions, waste handling conditions, local system calibration (R & S)
+
+---
+
+### 🇪🇬 Regional Context Sources
+
+8. Egyptian Environmental Affairs Agency (EEAA)  
+   ➜ Used for: Egypt waste management structure, policy baseline, recycling infrastructure reality (P)
+
+---
+
+### 📌 Notes
+
+This dashboard combines:
+- Global benchmark datasets  
+- Academic lifecycle assessment (LCA) models  
+- Egypt-specific system assumptions  
+
+👉 Some values are **engineering estimates** used for modeling and visualization.
+""")
+
+    st.info("""
+⚠️ Important Note:
+This market research dashboard uses a mix of:
+- official global reports  
+- academic LCA studies  
+- engineering assumptions for Egypt  
+
+For academic submission, replace estimated values with official datasets if required.
 """)
