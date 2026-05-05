@@ -54,17 +54,190 @@ page = st.sidebar.radio("Navigation", ["Dashboard", "Market Engine"])
 
 if page == "Dashboard":
 
-    st.title("♻️ Plastic Recycling Dashboard")
+    st.title("♻️ Environmental and Economic Comparison of Plastic Recycling Pathways")
+    st.caption("Egypt-focused dashboard using benchmark factors from Volk et al. (2021) and Egypt waste-context sources")
 
-    waste = st.number_input("Waste input (kg)", 100, 1000000, 10000)
+    st.markdown("## Dashboard Inputs")
 
-    df["CO2 Impact"] = waste * df["Net GWP"]
+    input_col1, input_col2 = st.columns([2, 1])
+
+    with input_col1:
+        selected_methods = st.multiselect(
+            "Choose recycling pathways to compare:",
+            options=df["Method"].tolist(),
+            default=df["Method"].tolist()
+        )
+
+    with input_col2:
+        waste_input = st.number_input(
+            "Plastic waste input (kg):",
+            min_value=100,
+            max_value=10_000_000,
+            value=10000,
+            step=100
+        )
+
+    accounting_mode = st.radio(
+        "Choose impact accounting mode:",
+        ["Gross impact", "Net impact with substitution credit"],
+        horizontal=True
+    )
+
+    st.info(
+        "Gross impact means direct recycling-process burden only. "
+        "Net impact includes credits for avoiding virgin plastic production. "
+        "Negative net values mean savings compared with virgin plastic production."
+    )
+
+    filtered = df[df["Method"].isin(selected_methods)].copy()
+
+    if filtered.empty:
+        st.error("Please select at least one recycling pathway.")
+        st.stop()
+
+    if accounting_mode == "Gross impact":
+        gwp_col = "Gross GWP kg CO2e/kg"
+        ced_col = "Gross CED MJ/kg"
+        cost_col_egp = "Gross Cost EGP/kg"
+    else:
+        gwp_col = "Net GWP kg CO2e/kg"
+        ced_col = "Net CED MJ/kg"
+        cost_col_egp = "Net Cost EGP/kg"
+
+    filtered["Selected GWP kg CO2e/kg"] = filtered[gwp_col]
+    filtered["Selected CED MJ/kg"] = filtered[ced_col]
+    filtered["Selected Cost EGP/kg"] = filtered[cost_col_egp]
+
+    filtered["Recovered Output (kg)"] = waste_input * filtered["Efficiency (%)"] / 100
+    filtered["Total CO2e (kg)"] = waste_input * filtered["Selected GWP kg CO2e/kg"]
+    filtered["Total CED (MJ)"] = waste_input * filtered["Selected CED MJ/kg"]
+    filtered["Total Cost (EGP)"] = waste_input * filtered["Selected Cost EGP/kg"]
+
+    st.header("1. Scenario Summary")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Waste Input", f"{waste_input:,.0f} kg")
+    col2.metric("Best Efficiency", f"{filtered['Efficiency (%)'].max():.0f}%")
+    col3.metric("Lowest GWP", f"{filtered['Selected GWP kg CO2e/kg'].min():.2f} kg CO₂e/kg")
+    col4.metric("Lowest Cost", f"{filtered['Selected Cost EGP/kg'].min():.2f} EGP/kg")
+
+    st.header("2. Visual Technical Comparison")
+
+    st.subheader("Favorite Plastic Type for Each Recycling Pathway")
+
+    for _, row in filtered.iterrows():
+        st.info(f"**{row['Method']}** → {row['Favorite Plastic Type']}")
 
     st.subheader("Efficiency Comparison")
-    st.plotly_chart(px.bar(df, x="Method", y="Efficiency (%)"))
 
-    st.subheader("Climate Impact")
-    st.plotly_chart(px.bar(df, x="Method", y="CO2 Impact"))
+    fig_eff = px.bar(
+        filtered,
+        x="Method",
+        y="Efficiency (%)",
+        text="Efficiency (%)",
+        title="Recycling Efficiency (%)"
+    )
+    fig_eff.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+    st.plotly_chart(fig_eff, use_container_width=True)
+
+    st.header("3. Environmental Effects")
+
+    fig_gwp = px.bar(
+        filtered,
+        x="Method",
+        y="Selected GWP kg CO2e/kg",
+        text="Selected GWP kg CO2e/kg",
+        title=f"Global Warming Potential - {accounting_mode}"
+    )
+    fig_gwp.update_traces(texttemplate="%{text:.2f} kg CO₂e/kg", textposition="outside")
+    st.plotly_chart(fig_gwp, use_container_width=True)
+
+    fig_ced = px.bar(
+        filtered,
+        x="Method",
+        y="Selected CED MJ/kg",
+        text="Selected CED MJ/kg",
+        title=f"Cumulative Energy Demand - {accounting_mode}"
+    )
+    fig_ced.update_traces(texttemplate="%{text:.2f} MJ/kg", textposition="outside")
+    st.plotly_chart(fig_ced, use_container_width=True)
+
+    st.header("4. Economic Effects")
+
+    fig_cost_egp = px.bar(
+        filtered,
+        x="Method",
+        y="Selected Cost EGP/kg",
+        text="Selected Cost EGP/kg",
+        title=f"Cost per kg Input in EGP - {accounting_mode}"
+    )
+    fig_cost_egp.update_traces(texttemplate="%{text:.2f} EGP/kg", textposition="outside")
+    st.plotly_chart(fig_cost_egp, use_container_width=True)
+
+    st.header("5. Scenario Calculation Results")
+
+    scenario_data = filtered[
+        [
+            "Method",
+            "Recovered Output (kg)",
+            "Selected GWP kg CO2e/kg",
+            "Total CO2e (kg)",
+            "Selected CED MJ/kg",
+            "Total CED (MJ)",
+            "Selected Cost EGP/kg",
+            "Total Cost (EGP)"
+        ]
+    ].copy()
+
+    scenario_data = scenario_data.round({
+        "Recovered Output (kg)": 0,
+        "Selected GWP kg CO2e/kg": 2,
+        "Total CO2e (kg)": 2,
+        "Selected CED MJ/kg": 2,
+        "Total CED (MJ)": 2,
+        "Selected Cost EGP/kg": 2,
+        "Total Cost (EGP)": 2
+    })
+
+    st.dataframe(scenario_data, use_container_width=True)
+
+    st.header("6. Cost Conversion Explanation")
+
+    st.markdown(f"""
+    The original cost values in Volk et al. (2021) are reported in **€/kg input**.
+
+    **Cost EGP/kg = Cost EUR/kg × {EUR_TO_EGP}**
+
+    Example:
+    0.10 €/kg × {EUR_TO_EGP} = {0.10 * EUR_TO_EGP:.2f} EGP/kg
+
+    Total Cost = Waste Input × Cost EGP/kg
+    """)
+
+    st.header("7. Engineering Recommendation")
+
+    ranking = filtered.sort_values(
+        by=["Selected GWP kg CO2e/kg", "Selected CED MJ/kg", "Selected Cost EGP/kg"],
+        ascending=[True, True, True]
+    )
+
+    best_method = ranking.iloc[0]
+
+    st.success(
+        f"Preferred pathway: **{best_method['Method']}**"
+    )
+
+    st.header("8. Data Sources and Calculation Method")
+
+    st.markdown("""
+    Volk et al. (2021) – Journal of Industrial Ecology
+
+    Recovered Output = Waste Input × Efficiency / 100  
+    Total GWP = Waste Input × GWP factor  
+    Total CED = Waste Input × CED factor  
+    Cost EGP/kg = Cost EUR/kg × Exchange Rate  
+    """)
 
 # =========================
 # MARKET ENGINE
