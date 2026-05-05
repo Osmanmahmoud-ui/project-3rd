@@ -498,48 +498,30 @@ Investment logic identifies **system bottlenecks**:
     # FUTURE OUTLOOK
     # =========================
 
-    st.subheader("🌍 Future Outlook")
-
-    def future(r):
-        s = r["Recycling"] + r["Sort"] + r["Policy"]
-
-        if s > 35:
-            return "Advanced circular transition"
-        elif s > 25:
-            return "Strong growth phase"
-        elif s > 15:
-            return "Transition phase"
-        return "Early development"
-
-    st.write(f"{m1}: {future(a)}")
-    st.write(f"{m2}: {future(b)}")
-
-    with st.expander("📖 Engineering Interpretation"):
-        st.write("""
-Future outlook predicts **system evolution stage**:
-
-- Recycling → system performance  
-- Sorting → infrastructure readiness  
-- Policy → governance strength  
-
-👉 Higher score = faster circular transition
-""")
-
-    st.markdown("---")
-
-    # =========================
-    # REFERENCES
-    # =========================
-
     st.subheader("📚 References")
 
-    with st.expander("Show References"):
-        st.markdown("""
-- OECD (2022) — Global Plastics Outlook  
-- World Bank — What a Waste 2.0  
-- UNEP — Circular Economy Reports  
-- European Commission — Circular Economy Action Plan  
-- IEA — Energy & Waste Systems Reports  
-- Volk et al. (2021) — Plastic Recycling LCA Study  
+with st.expander("Show References"):
+
+    st.markdown("""
+### 🌍 Global Policy & Reports
+
+- OECD (2022) — *Global Plastics Outlook*  
+- World Bank — *What a Waste 2.0*  
+- United Nations Environment Programme (UNEP) — *Circular Economy Reports*  
+- European Commission — *Circular Economy Action Plan*  
+- International Energy Agency (IEA) — *Energy & Waste Systems Reports*  
+
+
+---
+
+### 📖 Academic Sources
+
+- Volk et al. (2021) — *Plastic Recycling Life Cycle Assessment (LCA) Study*  
+
+
+---
+
+### 🇪🇬 Regional Sources
+
 - Egyptian Environmental Affairs Agency (EEAA)
 """)
