@@ -10,12 +10,12 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------
-# Currency
+# Currency Conversion
 # -------------------------------------------------------
 EUR_TO_EGP = 62.669
 
 # -------------------------------------------------------
-# DASHBOARD DATA (UNCHANGED)
+# DASHBOARD DATA (UNCHANGED - DO NOT EDIT)
 # -------------------------------------------------------
 df = pd.DataFrame([
     {
@@ -60,7 +60,7 @@ df["Gross Cost EGP/kg"] = df["Gross Cost EUR/kg"] * EUR_TO_EGP
 df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
 
 # -------------------------------------------------------
-# MARKET DATA (EXPANDED)
+# MARKET DATA
 # -------------------------------------------------------
 market = pd.DataFrame([
     {"Market": "Egypt", "Recycling": 12, "Mech": 7, "Chem": 3, "Therm": 4, "Sort": 4, "Policy": 5, "Conf": "High"},
@@ -96,75 +96,57 @@ if page == "Dashboard":
     st.plotly_chart(px.bar(df, x="Method", y="Cost"))
 
 # -------------------------------------------------------
-# 🏆 MARKET ENGINE (SAFE + JURY VERSION)
+# 🌍 MARKET ENGINE (ONLY PART EDITED)
 # -------------------------------------------------------
 else:
 
-    st.title("🌍 Circular Economy Jury Engine")
+    st.title("🌍 Market vs Market Plastic Waste System Engine")
 
-    c1, c2 = st.columns(2)
+    st.markdown("""
+    This engine compares two markets in terms of plastic waste generation,
+    recycling performance, and system maturity.
+    """)
 
-    with c1:
-        m1 = st.selectbox("Market 1", market["Market"])
+    col1, col2 = st.columns(2)
 
-    with c2:
-        m2 = st.selectbox("Market 2", market["Market"])
+    with col1:
+        m1 = st.selectbox("Select Market 1", market["Market"])
 
-    # ---------------------------------------------------
-    # SAFETY CHECK (FIXES YOUR ERROR)
-    # ---------------------------------------------------
+    with col2:
+        m2 = st.selectbox("Select Market 2", market["Market"])
+
     if m1 == m2:
-        st.error("❌ Please select TWO DIFFERENT markets.")
+        st.error("Please select two different markets.")
         st.stop()
 
     sel = market[market["Market"].isin([m1, m2])].copy()
 
-    if len(sel) < 2:
-        st.error("❌ Comparison requires two markets.")
-        st.stop()
-
     a = sel.iloc[0]
     b = sel.iloc[1]
 
-    # ---------------------------------------------------
-    # KPIs
-    # ---------------------------------------------------
-    st.subheader("📊 KPIs")
+    # =====================================================
+    # 1. RECYCLING SCALE
+    # =====================================================
+    st.subheader("🌍 Recycling Scale Comparison")
+    st.caption("Compares recycling rate between selected markets.")
 
-    c1, c2, c3, c4 = st.columns(4)
+    scale_df = pd.DataFrame([
+        {"Market": m1, "Recycling Rate": a["Recycling"]},
+        {"Market": m2, "Recycling Rate": b["Recycling"]}
+    ])
 
-    c1.metric(m1, f"{a['Recycling']}%")
-    c2.metric(m2, f"{b['Recycling']}%")
-    c3.metric("Sorting Gap", f"{b['Sort'] - a['Sort']:+}")
-    c4.metric("Policy Gap", f"{b['Policy'] - a['Policy']:+}")
+    st.plotly_chart(px.bar(scale_df, x="Market", y="Recycling Rate", text="Recycling Rate"))
 
-    # ---------------------------------------------------
-    # NORMALIZED SCORE
-    # ---------------------------------------------------
-    sel["Score"] = (
-        sel["Recycling"] * 0.4 +
-        sel["Sort"] * 6 +
-        sel["Policy"] * 6
-    )
+    st.info("""
+    This shows how efficiently each market converts plastic waste into recycled material.
+    Higher values indicate stronger circular economy performance.
+    """)
 
-    sel["Normalized"] = (
-        sel["Recycling"] / 40 * 35 +
-        sel["Sort"] / 10 * 30 +
-        sel["Policy"] / 10 * 35
-    )
-
-    st.subheader("🏁 Jury Score")
-
-    st.plotly_chart(px.bar(sel, x="Market", y="Normalized", text="Normalized"))
-
-    winner = sel.sort_values("Normalized", ascending=False).iloc[0]
-
-    st.success(f"🏆 Winner: {winner['Market']} ({winner['Normalized']:.1f}/100)")
-
-    # ---------------------------------------------------
-    # RADAR
-    # ---------------------------------------------------
-    st.subheader("🧭 System Radar")
+    # =====================================================
+    # 2. RADAR
+    # =====================================================
+    st.subheader("🧭 System Maturity Radar")
+    st.caption("Shows how developed each recycling system is across key dimensions.")
 
     fig = go.Figure()
 
@@ -178,21 +160,61 @@ else:
 
     st.plotly_chart(fig)
 
-    # ---------------------------------------------------
-    # GAP ANALYSIS
-    # ---------------------------------------------------
-    st.subheader("📉 Gap Analysis")
+    st.info("""
+    Radar interpretation:
+    - Mechanical → clean plastic recycling strength
+    - Chemical → advanced material recovery capability
+    - Thermal → mixed waste treatment dependency
+    - Sorting → collection efficiency
+    - Policy → regulatory strength
+
+    Larger balanced shape = more advanced circular system.
+    """)
+
+    # =====================================================
+    # 3. GAP ANALYSIS
+    # =====================================================
+    st.subheader("📉 System Gap Analysis")
+    st.caption("Shows structural differences between markets.")
 
     st.info(f"""
     Recycling Gap: {b['Recycling'] - a['Recycling']}%
+
     Sorting Gap: {b['Sort'] - a['Sort']}
+
     Policy Gap: {b['Policy'] - a['Policy']}
     """)
 
-    # ---------------------------------------------------
-    # CONFIDENCE
-    # ---------------------------------------------------
-    st.subheader("🔍 Data Confidence")
+    st.markdown("""
+    Interpretation:
+    - Recycling gap → overall system performance difference  
+    - Sorting gap → infrastructure efficiency difference  
+    - Policy gap → governance strength difference  
+    """)
+
+    # =====================================================
+    # 4. ENGINEERING INSIGHT
+    # =====================================================
+    st.subheader("🧠 Engineering Interpretation")
+
+    if a["Sort"] < b["Sort"]:
+        st.write("✔ Market 2 has better sorting infrastructure")
+
+    if a["Policy"] < b["Policy"]:
+        st.write("✔ Market 2 has stronger policy framework")
+
+    if a["Recycling"] < b["Recycling"]:
+        st.write("✔ Market 2 has higher recycling efficiency")
+
+    st.info("""
+    Waste management performance depends on system integration:
+    not just technology, but also policy + sorting infrastructure.
+    """)
+
+    # =====================================================
+    # 5. DATA CONFIDENCE
+    # =====================================================
+    st.subheader("🔍 Data Confidence Level")
 
     conf_map = {"High": 3, "Medium": 2, "Low": 1}
 
@@ -200,60 +222,21 @@ else:
         sel,
         x="Market",
         y=sel["Conf"].map(conf_map),
-        text="Conf",
-        title="Data Reliability Level"
+        text="Conf"
     ))
 
-    # ---------------------------------------------------
-    # INSIGHT
-    # ---------------------------------------------------
-    st.subheader("🧠 Jury Insight")
-
-    st.warning("""
-    Market leadership is driven by system integration:
-    - Policy strength
-    - Sorting efficiency
-    - Recycling capacity
+    st.info("""
+    Higher confidence means better data availability and more reliable national statistics.
     """)
 
-    # ---------------------------------------------------
-    # RECOMMENDATIONS
-    # ---------------------------------------------------
-    st.subheader("🎯 Strategy")
+    # =====================================================
+    # 6. FINAL CONCLUSION
+    # =====================================================
+    st.subheader("🏁 Final Conclusion")
 
-    if a["Sort"] < b["Sort"]:
-        st.write("✔ Improve sorting systems")
+    winner = sel.loc[sel["Recycling"].idxmax(), "Market"]
 
-    if a["Policy"] < b["Policy"]:
-        st.write("✔ Strengthen policy")
-
-    if a["Recycling"] < b["Recycling"]:
-        st.write("✔ Increase recycling capacity")
-
-    # ---------------------------------------------------
-    # EGYPT NOTE
-    # ---------------------------------------------------
-    if "Egypt" in [m1, m2]:
-        st.error("Egypt opportunity: hybrid recycling + policy + sorting upgrade")
-
-    # ---------------------------------------------------
-    # REFERENCES
-    # ---------------------------------------------------
-    st.subheader("📚 References")
-
-    st.markdown("""
-    OECD (2022) – Global Plastics Outlook  
-    UNEP – Waste Reports  
-    World Bank – What a Waste 2.0  
-    EU Circular Economy Action Plan  
-    Volk et al. (2021) – Recycling LCA study  
-    EPA / EEAA / JETRO datasets  
-    """)
-
-    # ---------------------------------------------------
-    # FINAL MESSAGE
-    # ---------------------------------------------------
     st.success(f"""
-    🏆 Final Decision:
-    {winner['Market']} leads due to balanced policy + sorting + recycling system integration.
+    Overall, {winner} demonstrates stronger circular economy performance
+    due to higher recycling efficiency and more developed system structure.
     """)
