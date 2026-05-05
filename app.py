@@ -332,6 +332,31 @@ This model converts system complexity into a single performance score:
     st.markdown("---")
 
     # =========================
+# ENGINEERING INTERPRETATION (BUTTON)
+# =========================
+
+if "eng" not in st.session_state:
+    st.session_state.eng = False
+
+if st.button("🧠 Engineering Interpretation"):
+    st.session_state.eng = not st.session_state.eng
+
+if st.session_state.eng:
+
+    best_market = scores.loc[scores["Score"].idxmax(), "Market"]
+
+    st.success(f"""
+🏆 **Winner: {best_market}**
+
+This market performs better because:
+- Higher system balance (Recycling + Policy + Sorting)
+- More stable circular economy structure
+- Better industrial readiness
+
+👉 Weak markets usually fail due to sorting or policy gaps
+""")
+    
+    # =========================
     # CATEGORY WINNERS
     # =========================
 
@@ -408,6 +433,29 @@ It evaluates:
 """)
 
     st.markdown("---")
+
+# =========================
+# IMPROVEMENT SECTION
+# =========================
+
+st.subheader("🚀 How to Improve Each Market")
+
+def improve(m, r):
+    tips = []
+
+    if r["Sort"] < 6:
+        tips.append("Upgrade sorting infrastructure")
+    if r["Chem"] < 6:
+        tips.append("Invest in chemical recycling")
+    if r["Therm"] < 6:
+        tips.append("Improve thermal recovery systems")
+    if r["Policy"] < 6:
+        tips.append("Strengthen environmental policies")
+
+    return f"{m}: " + (" | ".join(tips) if tips else "System already strong")
+
+st.write(improve(m1, a))
+st.write(improve(m2, b))
 
     # =========================
     # SYSTEM CLASSIFICATION
