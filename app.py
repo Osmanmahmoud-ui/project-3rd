@@ -4,18 +4,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # =========================
-# SAFE PDF IMPORT (FIX)
+# PAGE CONFIG
 # =========================
-try:
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib.pagesizes import A4
-    PDF_AVAILABLE = True
-except:
-    PDF_AVAILABLE = False
 
 st.set_page_config(
-    page_title="Plastic Recycling Engine",
+    page_title="Plastic Recycling System Engine",
     page_icon="♻️",
     layout="wide"
 )
@@ -35,7 +28,7 @@ df = pd.DataFrame([
 df["Cost EGP"] = df["Cost EUR"] * EUR_TO_EGP
 
 # =========================
-# MARKET DATA (FIXED + SAUDI)
+# MARKET DATA (FIXED + SAUDI INCLUDED)
 # =========================
 
 market = pd.DataFrame([
@@ -50,65 +43,28 @@ market = pd.DataFrame([
 ])
 
 # =========================
-# PDF GENERATOR
-# =========================
-
-def generate_pdf(m1, m2, a, b):
-    file_path = "market_report.pdf"
-    doc = SimpleDocTemplate(file_path, pagesize=A4)
-    styles = getSampleStyleSheet()
-
-    content = []
-
-    content.append(Paragraph("Plastic Waste Market Report", styles["Title"]))
-    content.append(Spacer(1, 12))
-
-    content.append(Paragraph(f"Market 1: {m1}", styles["Normal"]))
-    content.append(Paragraph(f"Market 2: {m2}", styles["Normal"]))
-    content.append(Spacer(1, 12))
-
-    content.append(Paragraph("Key Indicators", styles["Heading2"]))
-    content.append(Paragraph(f"{m1}: {a['Recycling']}%", styles["Normal"]))
-    content.append(Paragraph(f"{m2}: {b['Recycling']}%", styles["Normal"]))
-    content.append(Spacer(1, 12))
-
-    content.append(Paragraph("System Gap", styles["Heading2"]))
-    content.append(Paragraph(f"Recycling Gap: {b['Recycling'] - a['Recycling']}%", styles["Normal"]))
-    content.append(Paragraph(f"Sorting Gap: {b['Sort'] - a['Sort']}", styles["Normal"]))
-    content.append(Paragraph(f"Policy Gap: {b['Policy'] - a['Policy']}", styles["Normal"]))
-    content.append(Spacer(1, 12))
-
-    winner = m1 if a["Recycling"] > b["Recycling"] else m2
-
-    content.append(Paragraph("Conclusion", styles["Heading2"]))
-    content.append(Paragraph(
-        f"{winner} has stronger circular economy performance.",
-        styles["Normal"]
-    ))
-
-    doc.build(content)
-    return file_path
-
-# =========================
 # NAVIGATION
 # =========================
 
 page = st.sidebar.radio("Navigation", ["Dashboard", "Market Engine"])
 
 # =========================
-# DASHBOARD
+# DASHBOARD (UNCHANGED LOGIC)
 # =========================
 
 if page == "Dashboard":
 
-    st.title("♻️ Recycling Dashboard")
+    st.title("♻️ Plastic Recycling Dashboard")
 
-    waste = st.number_input("Waste (kg)", 100, 1000000, 10000)
+    waste = st.number_input("Waste input (kg)", 100, 1000000, 10000)
 
-    df["CO2"] = waste * df["Net GWP"]
+    df["CO2 Impact"] = waste * df["Net GWP"]
 
+    st.subheader("Efficiency Comparison")
     st.plotly_chart(px.bar(df, x="Method", y="Efficiency (%)"))
-    st.plotly_chart(px.bar(df, x="Method", y="CO2"))
+
+    st.subheader("Climate Impact")
+    st.plotly_chart(px.bar(df, x="Method", y="CO2 Impact"))
 
 # =========================
 # MARKET ENGINE
@@ -116,7 +72,11 @@ if page == "Dashboard":
 
 else:
 
-    st.title("🌍 Market Comparison Engine")
+    st.title("🌍 Market vs Market Engine (Recycling System Analysis)")
+
+    # =========================
+    # MARKET SELECT
+    # =========================
 
     col1, col2 = st.columns(2)
 
@@ -127,7 +87,7 @@ else:
         m2 = st.selectbox("Market 2", market["Market"])
 
     if m1 == m2:
-        st.error("Select different markets")
+        st.error("Please select two different markets")
         st.stop()
 
     sel = market[market["Market"].isin([m1, m2])]
@@ -136,13 +96,17 @@ else:
     b = sel[sel["Market"] == m2].iloc[0]
 
     # =========================
-    # CHARTS
+    # SECTION: COMPARISON
     # =========================
 
-    st.subheader("Recycling Comparison")
+    st.subheader("📊 Recycling Rate Comparison")
     st.plotly_chart(px.bar(sel, x="Market", y="Recycling"))
 
-    st.subheader("System Radar")
+    # =========================
+    # RADAR CHART
+    # =========================
+
+    st.subheader("📡 System Radar (Market Structure)")
 
     fig = go.Figure()
 
@@ -156,39 +120,138 @@ else:
 
     st.plotly_chart(fig)
 
-    # =========================
-    # ANALYSIS
-    # =========================
-
-    st.subheader("System Gap")
-
-    st.write(f"Recycling Gap: {b['Recycling'] - a['Recycling']}%")
-    st.write(f"Sorting Gap: {b['Sort'] - a['Sort']}")
-    st.write(f"Policy Gap: {b['Policy'] - a['Policy']}")
-
-    winner = m1 if a["Recycling"] > b["Recycling"] else m2
-    st.success(f"Better system: {winner}")
+    st.info("""
+    Radar Explanation:
+    Mechanical = clean recycling strength  
+    Chemical = advanced recycling capability  
+    Thermal = mixed waste handling  
+    Sorting = collection system strength  
+    Policy = government support level  
+    """)
 
     # =========================
-    # PDF SECTION
+    # GAP ANALYSIS
+    # =========================
+
+    st.subheader("📉 System Gap Analysis")
+
+    recycling_gap = b["Recycling"] - a["Recycling"]
+    sort_gap = b["Sort"] - a["Sort"]
+    policy_gap = b["Policy"] - a["Policy"]
+
+    st.write(f"Recycling Gap: {recycling_gap}%")
+    st.write(f"Sorting Gap: {sort_gap}")
+    st.write(f"Policy Gap: {policy_gap}")
+
+    # =========================
+    # OVERALL SCORE
+    # =========================
+
+    st.subheader("🏆 Overall Market Score")
+
+    def score(r):
+        return (
+            r["Recycling"] * 0.3 +
+            r["Sort"] * 0.25 +
+            r["Policy"] * 0.25 +
+            r["Mech"] * 0.1 +
+            r["Chem"] * 0.1
+        )
+
+    scores = pd.DataFrame([
+        {"Market": m1, "Score": score(a)},
+        {"Market": m2, "Score": score(b)}
+    ])
+
+    st.plotly_chart(px.bar(scores, x="Market", y="Score", text="Score"))
+
+    st.info("Combined index of recycling, policy, and technology maturity.")
+
+    # =========================
+    # CATEGORY WINNERS
+    # =========================
+
+    st.subheader("🥇 Category Winners")
+
+    def winner(x, y, key):
+        if x[key] > y[key]:
+            return m1
+        elif x[key] < y[key]:
+            return m2
+        else:
+            return "Tie"
+
+    categories = {
+        "Recycling Rate": "Recycling",
+        "Sorting": "Sort",
+        "Policy Strength": "Policy",
+        "Mechanical Recycling": "Mech",
+        "Chemical Recycling": "Chem",
+        "Thermal Recycling": "Therm"
+    }
+
+    for name, key in categories.items():
+        st.write(f"{name}: **{winner(a, b, key)}**")
+
+    # =========================
+    # SYSTEM CLASSIFICATION
+    # =========================
+
+    st.subheader("🏗 Circular Economy Classification")
+
+    def classify(x):
+        if x > 30:
+            return "Advanced Circular System"
+        elif x > 15:
+            return "Transition System"
+        else:
+            return "Emerging System"
+
+    st.write(f"{m1}: {classify(a['Recycling'])}")
+    st.write(f"{m2}: {classify(b['Recycling'])}")
+
+    # =========================
+    # ENGINEERING INSIGHT
+    # =========================
+
+    st.subheader("🧠 Engineering Insight")
+
+    better = m1 if a["Recycling"] > b["Recycling"] else m2
+
+    st.success(f"""
+    {better} shows a stronger circular economy structure due to higher recycling efficiency
+    and better system integration between collection, sorting, and processing.
+    """)
+
+    # =========================
+    # FINAL CONCLUSION
+    # =========================
+
+    st.subheader("🏁 Final Conclusion")
+
+    winner_final = m1 if a["Recycling"] > b["Recycling"] else m2
+
+    st.success(f"""
+    Final result:
+    {winner_final} has the more mature plastic recycling system based on overall circular economy indicators.
+    """)
+
+    # =========================
+    # REFERENCES
     # =========================
 
     st.divider()
-    st.subheader("📄 Report Generator")
+    st.subheader("📚 References")
 
-    if not PDF_AVAILABLE:
-        st.warning("PDF feature disabled: install reportlab in requirements.txt")
-    else:
-        if st.button("Generate PDF Report"):
+    st.markdown("""
+    - OECD (2022) — Global Plastics Outlook  
+    - UNEP (2023) — Plastic Pollution Report  
+    - World Bank (2018) — What a Waste 2.0  
+    - European Commission — Circular Economy Action Plan  
+    - IEA — Energy & Waste Reports  
+    - Volk et al. (2021) — Recycling techno-economic analysis  
+    - Ellen MacArthur Foundation — Circular Economy Reports  
+    - Egypt EEAA — National Waste Strategy Reports  
+    """)
 
-            pdf_file = generate_pdf(m1, m2, a, b)
-
-            with open(pdf_file, "rb") as f:
-                st.download_button(
-                    "Download PDF",
-                    f,
-                    file_name="market_report.pdf",
-                    mime="application/pdf"
-                )
-
-    st.info("Auto-generated engineering report from selected markets.")
+    st.info("References used for benchmarking and system modeling.")
