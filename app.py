@@ -3,55 +3,40 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.pagesizes import A4
+# =========================
+# SAFE PDF IMPORT (FIX)
+# =========================
+try:
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.pagesizes import A4
+    PDF_AVAILABLE = True
+except:
+    PDF_AVAILABLE = False
 
 st.set_page_config(
-    page_title="Plastic Recycling Comparison Engine",
+    page_title="Plastic Recycling Engine",
     page_icon="♻️",
     layout="wide"
 )
 
-# =======================================================
+# =========================
 # DASHBOARD DATA (UNCHANGED)
-# =======================================================
+# =========================
 
 EUR_TO_EGP = 62.669
 
 df = pd.DataFrame([
-    {
-        "Method": "Mechanical Recycling",
-        "Efficiency (%)": 88,
-        "Gross GWP kg CO2e/kg": 0.67,
-        "Net GWP kg CO2e/kg": 0.18,
-        "Gross Cost EUR/kg": 0.10,
-        "Net Cost EUR/kg": -0.16
-    },
-    {
-        "Method": "Pyrolysis",
-        "Efficiency (%)": 75,
-        "Gross GWP kg CO2e/kg": 0.96,
-        "Net GWP kg CO2e/kg": 0.25,
-        "Gross Cost EUR/kg": 0.33,
-        "Net Cost EUR/kg": -0.24
-    },
-    {
-        "Method": "Hybrid Recycling",
-        "Efficiency (%)": 82,
-        "Gross GWP kg CO2e/kg": 0.48,
-        "Net GWP kg CO2e/kg": -0.22,
-        "Gross Cost EUR/kg": 0.14,
-        "Net Cost EUR/kg": -0.29
-    }
+    {"Method": "Mechanical", "Efficiency (%)": 88, "Net GWP": 0.18, "Cost EUR": 0.10},
+    {"Method": "Pyrolysis", "Efficiency (%)": 75, "Net GWP": 0.25, "Cost EUR": 0.33},
+    {"Method": "Hybrid", "Efficiency (%)": 82, "Net GWP": -0.22, "Cost EUR": 0.14}
 ])
 
-df["Gross Cost EGP/kg"] = df["Gross Cost EUR/kg"] * EUR_TO_EGP
-df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
+df["Cost EGP"] = df["Cost EUR"] * EUR_TO_EGP
 
-# =======================================================
-# MARKET DATA (FIXED + UPDATED + SAUDI ADDED)
-# =======================================================
+# =========================
+# MARKET DATA (FIXED + SAUDI)
+# =========================
 
 market = pd.DataFrame([
     {"Market": "Egypt", "Recycling": 12, "Sort": 4, "Policy": 5, "Mech": 7, "Chem": 3, "Therm": 4},
@@ -64,29 +49,30 @@ market = pd.DataFrame([
     {"Market": "Saudi Arabia", "Recycling": 18, "Sort": 6, "Policy": 7, "Mech": 6, "Chem": 5, "Therm": 6}
 ])
 
-# =======================================================
+# =========================
 # PDF GENERATOR
-# =======================================================
+# =========================
 
 def generate_pdf(m1, m2, a, b):
-    file_path = "/mnt/data/market_report.pdf"
+    file_path = "market_report.pdf"
     doc = SimpleDocTemplate(file_path, pagesize=A4)
     styles = getSampleStyleSheet()
+
     content = []
 
-    content.append(Paragraph("Plastic Waste Market Comparison Report", styles["Title"]))
+    content.append(Paragraph("Plastic Waste Market Report", styles["Title"]))
     content.append(Spacer(1, 12))
 
-    content.append(Paragraph(f"<b>Market 1:</b> {m1}", styles["Normal"]))
-    content.append(Paragraph(f"<b>Market 2:</b> {m2}", styles["Normal"]))
+    content.append(Paragraph(f"Market 1: {m1}", styles["Normal"]))
+    content.append(Paragraph(f"Market 2: {m2}", styles["Normal"]))
     content.append(Spacer(1, 12))
 
-    content.append(Paragraph("<b>Key Indicators</b>", styles["Heading2"]))
-    content.append(Paragraph(f"{m1} Recycling Rate: {a['Recycling']}%", styles["Normal"]))
-    content.append(Paragraph(f"{m2} Recycling Rate: {b['Recycling']}%", styles["Normal"]))
+    content.append(Paragraph("Key Indicators", styles["Heading2"]))
+    content.append(Paragraph(f"{m1}: {a['Recycling']}%", styles["Normal"]))
+    content.append(Paragraph(f"{m2}: {b['Recycling']}%", styles["Normal"]))
     content.append(Spacer(1, 12))
 
-    content.append(Paragraph("<b>System Gaps</b>", styles["Heading2"]))
+    content.append(Paragraph("System Gap", styles["Heading2"]))
     content.append(Paragraph(f"Recycling Gap: {b['Recycling'] - a['Recycling']}%", styles["Normal"]))
     content.append(Paragraph(f"Sorting Gap: {b['Sort'] - a['Sort']}", styles["Normal"]))
     content.append(Paragraph(f"Policy Gap: {b['Policy'] - a['Policy']}", styles["Normal"]))
@@ -94,43 +80,43 @@ def generate_pdf(m1, m2, a, b):
 
     winner = m1 if a["Recycling"] > b["Recycling"] else m2
 
-    content.append(Paragraph("<b>Conclusion</b>", styles["Heading2"]))
+    content.append(Paragraph("Conclusion", styles["Heading2"]))
     content.append(Paragraph(
-        f"{winner} shows stronger circular economy performance based on system indicators.",
+        f"{winner} has stronger circular economy performance.",
         styles["Normal"]
     ))
 
     doc.build(content)
     return file_path
 
-# =======================================================
-# SIDEBAR
-# =======================================================
+# =========================
+# NAVIGATION
+# =========================
 
 page = st.sidebar.radio("Navigation", ["Dashboard", "Market Engine"])
 
-# =======================================================
-# DASHBOARD (UNCHANGED)
-# =======================================================
+# =========================
+# DASHBOARD
+# =========================
 
 if page == "Dashboard":
 
-    st.title("♻️ Plastic Recycling Dashboard")
+    st.title("♻️ Recycling Dashboard")
 
-    waste = st.number_input("Waste input (kg)", 100, 1000000, 10000)
+    waste = st.number_input("Waste (kg)", 100, 1000000, 10000)
 
-    df["CO2"] = waste * df["Net GWP kg CO2e/kg"]
+    df["CO2"] = waste * df["Net GWP"]
 
     st.plotly_chart(px.bar(df, x="Method", y="Efficiency (%)"))
     st.plotly_chart(px.bar(df, x="Method", y="CO2"))
 
-# =======================================================
+# =========================
 # MARKET ENGINE
-# =======================================================
+# =========================
 
 else:
 
-    st.title("🌍 Market vs Market Engine")
+    st.title("🌍 Market Comparison Engine")
 
     col1, col2 = st.columns(2)
 
@@ -141,7 +127,7 @@ else:
         m2 = st.selectbox("Market 2", market["Market"])
 
     if m1 == m2:
-        st.error("Select two different markets")
+        st.error("Select different markets")
         st.stop()
 
     sel = market[market["Market"].isin([m1, m2])]
@@ -149,11 +135,14 @@ else:
     a = sel[sel["Market"] == m1].iloc[0]
     b = sel[sel["Market"] == m2].iloc[0]
 
-    st.subheader("📊 Recycling Comparison")
+    # =========================
+    # CHARTS
+    # =========================
 
+    st.subheader("Recycling Comparison")
     st.plotly_chart(px.bar(sel, x="Market", y="Recycling"))
 
-    st.subheader("🧭 Radar System")
+    st.subheader("System Radar")
 
     fig = go.Figure()
 
@@ -167,34 +156,39 @@ else:
 
     st.plotly_chart(fig)
 
-    st.subheader("📉 System Gaps")
+    # =========================
+    # ANALYSIS
+    # =========================
+
+    st.subheader("System Gap")
 
     st.write(f"Recycling Gap: {b['Recycling'] - a['Recycling']}%")
     st.write(f"Sorting Gap: {b['Sort'] - a['Sort']}")
     st.write(f"Policy Gap: {b['Policy'] - a['Policy']}")
 
-    st.subheader("🧠 Insight")
-
     winner = m1 if a["Recycling"] > b["Recycling"] else m2
-    st.success(f"{winner} has stronger recycling system overall.")
+    st.success(f"Better system: {winner}")
 
-    # ===================================================
-    # PDF EXPORT
-    # ===================================================
+    # =========================
+    # PDF SECTION
+    # =========================
 
     st.divider()
-    st.subheader("📄 Generate Report")
+    st.subheader("📄 Report Generator")
 
-    if st.button("Generate PDF Report"):
+    if not PDF_AVAILABLE:
+        st.warning("PDF feature disabled: install reportlab in requirements.txt")
+    else:
+        if st.button("Generate PDF Report"):
 
-        pdf_file = generate_pdf(m1, m2, a, b)
+            pdf_file = generate_pdf(m1, m2, a, b)
 
-        with open(pdf_file, "rb") as f:
-            st.download_button(
-                label="Download PDF Report",
-                data=f,
-                file_name="market_comparison_report.pdf",
-                mime="application/pdf"
-            )
+            with open(pdf_file, "rb") as f:
+                st.download_button(
+                    "Download PDF",
+                    f,
+                    file_name="market_report.pdf",
+                    mime="application/pdf"
+                )
 
-    st.info("This report summarizes the full market comparison in a structured engineering format.")
+    st.info("Auto-generated engineering report from selected markets.")
