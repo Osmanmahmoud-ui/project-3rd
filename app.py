@@ -293,52 +293,65 @@ technology, infrastructure, or regulation.
     st.markdown("---")
 
     # =========================
-    # MCDA SCORE
-    # =========================
+# MCDA SCORE
+# =========================
 
-    st.subheader("🏆 Overall Market Score Index")
+st.subheader("🏆 Overall Market Score Index")
 
-    st.caption("Multi-Criteria Decision Analysis (MCDA) Circular Economy Index")
+st.caption("Multi-Criteria Decision Analysis (MCDA) Circular Economy Index")
 
-    st.latex(r"""
-    Score = 0.30R + 0.25S + 0.25P + 0.10M + 0.10C
-    """)
-
-    def score(r):
-        return (
-            r["Recycling"] * 0.30 +
-            r["Sort"] * 0.25 +
-            r["Policy"] * 0.25 +
-            r["Mech"] * 0.10 +
-            r["Chem"] * 0.10
-        )
-
-    scores = pd.DataFrame([
-        {"Market": m1, "Score": score(a)},
-        {"Market": m2, "Score": score(b)}
-    ])
-
-    st.plotly_chart(px.bar(scores, x="Market", y="Score", text="Score"), use_container_width=True)
-
-    with st.expander("📖 Explanation: MCDA Score Model"):
-        st.write("""
-This is a **Multi-Criteria Decision Analysis (MCDA)** model inspired by:
-
-- OECD (2022) Global Plastics Outlook  
-- UNEP Circular Economy Framework  
-- European Commission sustainability indicators  
-
-It combines:
-
-- Recycling → system output performance  
-- Sorting → collection efficiency  
-- Policy → governance strength  
-- Mechanical + Chemical → technology readiness  
-
-👉 Converts complex system data into one comparable score
+st.latex(r"""
+Score = 0.30R + 0.25S + 0.25P + 0.10M + 0.10C
 """)
 
-    st.markdown("---")
+# =========================
+# 📘 EXPLANATION BUTTON
+# =========================
+
+with st.expander("📖 What do R, S, P, M, C mean? (Click to expand)"):
+
+    st.markdown("""
+### 🟢 R = Recycling Rate
+- How much plastic waste is successfully recycled  
+- Higher = better system performance  
+
+### 🟡 S = Sorting Efficiency
+- How effective waste collection & separation is  
+- Higher = cleaner recycling stream  
+
+### 🔵 P = Policy Strength
+- Government laws, enforcement, regulations  
+- Higher = stronger circular economy governance  
+
+### 🟠 M = Mechanical Recycling Capacity
+- Physical recycling infrastructure (washing, shredding, extrusion)  
+- Higher = stronger industrial capability  
+
+### 🟣 C = Chemical Recycling Capacity
+- Advanced recycling (depolymerization, pyrolysis, etc.)  
+- Higher = ability to handle complex plastics  
+""")
+
+# =========================
+# SCORE FUNCTION
+# =========================
+
+def score(r):
+    return (
+        r["Recycling"] * 0.30 +
+        r["Sort"] * 0.25 +
+        r["Policy"] * 0.25 +
+        r["Mech"] * 0.10 +
+        r["Chem"] * 0.10
+    )
+
+scores = pd.DataFrame([
+    {"Market": m1, "Score": score(a)},
+    {"Market": m2, "Score": score(b)}
+])
+
+st.plotly_chart(px.bar(scores, x="Market", y="Score", text="Score"),
+                use_container_width=True)
 
     # =========================
     # CATEGORY WINNERS
