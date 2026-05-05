@@ -172,6 +172,10 @@ if page == "Dashboard":
 # MARKET ENGINE
 # =========================
 
+# =========================
+# MARKET ENGINE
+# =========================
+
 else:
 
     st.title("🌍 Market vs Market Engine (Plastic Recycling System Analysis)")
@@ -195,12 +199,12 @@ else:
         st.error("Please select two different markets.")
         st.stop()
 
-    market_map = {row["Market"]: row for _, row in market.iterrows()}
+    market_map = market.set_index("Market")
 
-    a = market_map[m1]
-    b = market_map[m2]
+    a = market_map.loc[m1]
+    b = market_map.loc[m2]
 
-    sel = pd.DataFrame([a, b])
+    sel = pd.DataFrame([a, b], index=[m1, m2])
 
     st.markdown("---")
 
@@ -210,8 +214,9 @@ else:
 
     st.subheader("📊 Recycling Rate Comparison")
 
-    fig = px.bar(sel, x="Market", y="Recycling", text="Recycling")
+    fig = px.bar(sel.reset_index(), x="index", y="Recycling", text="Recycling")
     fig.update_traces(texttemplate="%{text}%", textposition="outside")
+
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
@@ -224,13 +229,19 @@ else:
 
     fig = go.Figure()
 
-    for _, r in sel.iterrows():
-        fig.add_trace(go.Scatterpolar(
-            r=[r["Mech"], r["Chem"], r["Therm"], r["Sort"], r["Policy"]],
-            theta=["Mechanical", "Chemical", "Thermal", "Sorting", "Policy"],
-            fill="toself",
-            name=r["Market"]
-        ))
+    fig.add_trace(go.Scatterpolar(
+        r=[a["Mech"], a["Chem"], a["Therm"], a["Sort"], a["Policy"]],
+        theta=["Mechanical", "Chemical", "Thermal", "Sorting", "Policy"],
+        fill="toself",
+        name=m1
+    ))
+
+    fig.add_trace(go.Scatterpolar(
+        r=[b["Mech"], b["Chem"], b["Therm"], b["Sort"], b["Policy"]],
+        theta=["Mechanical", "Chemical", "Thermal", "Sorting", "Policy"],
+        fill="toself",
+        name=m2
+    ))
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -249,7 +260,7 @@ else:
     st.markdown("---")
 
     # =========================
-    # 🏆 MCDA SCORE (FIXED + CLEAR)
+    # MCDA SCORE
     # =========================
 
     st.subheader("🏆 Overall Market Score Index")
@@ -261,25 +272,25 @@ else:
     """)
 
     # =========================
-    # EXPLANATION BUTTON (IMPORTANT FIX)
+    # EXPLANATION BUTTON
     # =========================
 
     with st.expander("📖 What do R, S, P, M, C mean?"):
 
         st.markdown("""
 ### 🟢 R = Recycling Rate
-Amount of waste actually recycled (system output performance)
+Actual percentage of waste recycled in the system
 
 ### 🟡 S = Sorting Efficiency
-How well waste is collected and separated
+Efficiency of waste collection and separation
 
 ### 🔵 P = Policy Strength
-Government regulations, enforcement, and circular economy laws
+Government regulation, enforcement, and circular economy laws
 
-### 🟠 M = Mechanical Capacity
-Physical recycling infrastructure (shredding, washing, extrusion)
+### 🟠 M = Mechanical Recycling
+Physical recycling infrastructure (washing, shredding, extrusion)
 
-### 🟣 C = Chemical Capacity
+### 🟣 C = Chemical Recycling
 Advanced recycling (pyrolysis, depolymerization, etc.)
 """)
 
@@ -287,13 +298,13 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
     # SCORE FUNCTION
     # =========================
 
-    def score(r):
+    def score(x):
         return (
-            r["Recycling"] * 0.30 +   # R
-            r["Sort"] * 0.25 +        # S
-            r["Policy"] * 0.25 +      # P
-            r["Mech"] * 0.10 +        # M
-            r["Chem"] * 0.10          # C
+            x["Recycling"] * 0.30 +
+            x["Sort"] * 0.25 +
+            x["Policy"] * 0.25 +
+            x["Mech"] * 0.10 +
+            x["Chem"] * 0.10
         )
 
     scores = pd.DataFrame([
@@ -369,7 +380,7 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
 
     def priority(r):
         if r["Sort"] < 5:
-            return "Fix sorting infrastructure first"
+            return "Fix sorting infrastructure"
         elif r["Chem"] < 5:
             return "Expand chemical recycling"
         elif r["Therm"] < 5:
@@ -404,71 +415,21 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
     st.write(f"{m2}: {future(b)}")
 
     st.markdown("---")
-    
-# ---------------------------------------------------
-# Section 8: References
-# ---------------------------------------------------
 
-elif section == "References":
+    # =========================
+    # REFERENCES
+    # =========================
 
-    st.header("📚 References for Market Research")
+    st.subheader("📚 References")
 
-    st.markdown("""
-### 🌍 Global & Policy Sources
+    if st.checkbox("Show References"):
 
-1. OECD (2022) — *Global Plastics Outlook*  
-   ➜ Used for: global market benchmarking, recycling policy comparison, circular economy indicators (R & P)
-
-2. World Bank — *What a Waste 2.0*  
-   ➜ Used for: waste generation, sorting efficiency benchmarks, developing country system data (S)
-
-3. International Energy Agency (IEA) — Plastics & Recycling Reports  
-   ➜ Used for: energy use in recycling systems, thermal recovery insights (Therm)
-
-4. United Nations Environment Programme (UNEP) — Circular Economy Reports  
-   ➜ Used for: circular economy framework, policy strength, system structure (P)
-
-5. European Commission — Circular Economy Action Plan  
-   ➜ Used for: EU recycling targets, policy structure, system maturity comparison (P & R)
-
----
-
-### 🏭 Technical & Academic Sources
-
-6. Volk et al. (2021) — *Journal of Industrial Ecology*  
-   ➜ Used for:  
-   - Environmental impact (GWP, CED)  
-   - Cost per kg plastic  
-   - Recycling pathway performance (Mechanical / Chemical / Hybrid) (M & C)
-
-7. Cairo University — Technical Assessment Reports (Plastic Waste Systems)  
-   ➜ Used for: Egypt-specific assumptions, waste handling conditions, local system calibration (R & S)
-
----
-
-### 🇪🇬 Regional Context Sources
-
-8. Egyptian Environmental Affairs Agency (EEAA)  
-   ➜ Used for: Egypt waste management structure, policy baseline, recycling infrastructure reality (P)
-
----
-
-### 📌 Notes
-
-This dashboard combines:
-- Global benchmark datasets  
-- Academic lifecycle assessment (LCA) models  
-- Egypt-specific system assumptions  
-
-👉 Some values are **engineering estimates** used for modeling and visualization.
-""")
-
-    st.info("""
-⚠️ Important Note:
-This market research dashboard uses a mix of:
-- official global reports  
-- academic LCA studies  
-- engineering assumptions for Egypt  
-
-For academic submission, replace estimated values with official datasets if required.
+        st.markdown("""
+- OECD (2022) — Global Plastics Outlook  
+- World Bank — What a Waste 2.0  
+- UNEP — Circular Economy Reports  
+- IEA — Plastics Energy Reports  
+- European Commission — Circular Economy Action Plan  
+- Volk et al. (2021) — Journal of Industrial Ecology  
+- Egyptian Environmental Affairs Agency (EEAA)
 """)
