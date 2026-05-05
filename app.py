@@ -204,10 +204,8 @@ else:
         st.stop()
 
     market_map = {row["Market"]: row for _, row in market.iterrows()}
-
     a = market_map[m1]
     b = market_map[m2]
-
     sel = pd.DataFrame([a, b])
 
     st.markdown("---")
@@ -223,13 +221,18 @@ else:
     st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("📖 Explanation: Recycling Rate"):
-        st.write("""
-Recycling rate = percentage of waste successfully recycled.
+        st.markdown("""
+The recycling rate represents the **final system output efficiency**.
 
-It reflects:
+It measures how much plastic waste successfully returns into usable material instead of ending in landfill or leakage.
+
+### It depends on:
 - Collection efficiency
-- Sorting performance
+- Sorting quality
 - Infrastructure maturity
+- Industrial processing capacity
+
+👉 Higher values = stronger circular economy performance
 """)
 
     st.markdown("---")
@@ -253,13 +256,17 @@ It reflects:
     st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("📖 Explanation: Radar System"):
-        st.write("""
-Shows system maturity across 5 pillars:
-- Mechanical recycling
-- Chemical recycling
-- Thermal recovery
-- Sorting system
-- Policy strength
+        st.markdown("""
+This radar shows the **structural maturity of each market’s circular economy system**.
+
+### Axes meaning:
+- Mechanical → physical recycling infrastructure
+- Chemical → advanced recycling technologies
+- Thermal → energy recovery systems
+- Sorting → waste separation efficiency
+- Policy → regulatory strength
+
+👉 A larger and more balanced shape = a more advanced circular system
 """)
 
     st.markdown("---")
@@ -279,11 +286,15 @@ Shows system maturity across 5 pillars:
     st.write(f"Policy Gap: {policy_gap}")
 
     with st.expander("📖 Explanation: System Gaps"):
-        st.write("""
-Gaps show differences between markets:
-- Recycling gap → output efficiency difference
-- Sorting gap → infrastructure difference
-- Policy gap → governance strength difference
+        st.markdown("""
+System gaps identify **why two markets perform differently**.
+
+### Types of gaps:
+- Recycling gap → difference in system output efficiency
+- Sorting gap → difference in infrastructure quality
+- Policy gap → difference in governance strength
+
+👉 This helps identify whether issues are technological, infrastructural, or regulatory
 """)
 
     st.markdown("---")
@@ -293,31 +304,30 @@ Gaps show differences between markets:
     # =========================
 
     st.subheader("🏆 Overall Market Score Index")
-
     st.caption("MCDA = Multi-Criteria Decision Analysis")
 
     st.latex(r"""
     Score = 0.30R + 0.25S + 0.25P + 0.10M + 0.10C
     """)
 
-    # EXPLANATION BUTTON (FIXED AND KEPT)
-    with st.expander("📖 What do R, S, P, M, C mean?"):
-
+    with st.expander("📖 Explanation: MCDA Model"):
         st.markdown("""
-### 🟢 R = Recycling Rate
-Final recycled waste percentage
+The MCDA score is a **weighted decision model** used to compare markets.
 
-### 🟡 S = Sorting Efficiency
-How well waste is separated
+### Components:
+- R (Recycling) → system output performance
+- S (Sorting) → collection efficiency
+- P (Policy) → regulatory strength
+- M (Mechanical) → industrial capacity
+- C (Chemical) → advanced recycling capability
 
-### 🔵 P = Policy Strength
-Government regulation strength
+### Why weights?
+Weights reflect importance in circular economy development:
+- Recycling & Sorting → highest impact
+- Policy → system stability
+- Technology → enabling layer
 
-### 🟠 M = Mechanical Capacity
-Physical recycling infrastructure
-
-### 🟣 C = Chemical Capacity
-Advanced recycling technologies
+👉 Final score = overall circular economy maturity index
 """)
 
     def score(r):
@@ -334,10 +344,8 @@ Advanced recycling technologies
         {"Market": m2, "Score": score(b)}
     ])
 
-    st.plotly_chart(
-        px.bar(scores, x="Market", y="Score", text="Score"),
-        use_container_width=True
-    )
+    st.plotly_chart(px.bar(scores, x="Market", y="Score", text="Score"),
+                    use_container_width=True)
 
     st.markdown("---")
 
@@ -365,11 +373,15 @@ Advanced recycling technologies
         st.write(f"{name}: **{winner(a, b, key)}**")
 
     with st.expander("📖 Explanation: Category Winners"):
-        st.write("""
-Shows which market leads in each system component:
-- Infrastructure (sorting, policy)
-- Technology (mechanical, chemical, thermal)
-- Performance (recycling)
+        st.markdown("""
+This section identifies **which market leads in each subsystem**.
+
+### Interpretation:
+- Infrastructure strength → Sorting, Policy
+- Technology strength → Mechanical, Chemical, Thermal
+- Output strength → Recycling
+
+👉 This helps break down system performance into components
 """)
 
     st.markdown("---")
@@ -389,16 +401,28 @@ Shows which market leads in each system component:
 
     def explain(level):
         if level == "Advanced Circular System":
-            return "Highly developed circular economy system."
+            return "Highly developed circular economy with strong infrastructure and policy enforcement."
         elif level == "Transition System":
-            return "Developing circular infrastructure."
-        return "Early-stage waste system."
+            return "System in transition with growing recycling infrastructure."
+        return "Early-stage system with limited recycling capacity."
 
     m1_level = classify(a["Recycling"])
     m2_level = classify(b["Recycling"])
 
     st.write(f"{m1}: **{m1_level}** → {explain(m1_level)}")
     st.write(f"{m2}: **{m2_level}** → {explain(m2_level)}")
+
+    with st.expander("📖 Explanation: System Classification"):
+        st.markdown("""
+This classification groups markets into **development stages**.
+
+### Stages:
+- Emerging → weak infrastructure, low recycling
+- Transition → improving systems and investments
+- Advanced → mature circular economy
+
+👉 Based mainly on recycling + system readiness
+""")
 
     st.markdown("---")
 
@@ -410,17 +434,30 @@ Shows which market leads in each system component:
 
     def priority(r):
         if r["Sort"] < 5:
-            return "Fix sorting infrastructure first"
+            return "Priority 1: Improve sorting infrastructure"
         elif r["Chem"] < 5:
-            return "Expand chemical recycling"
+            return "Priority 2: Expand chemical recycling"
         elif r["Therm"] < 5:
-            return "Improve thermal recovery"
+            return "Priority 3: Improve thermal recovery"
         elif r["Policy"] < 5:
-            return "Strengthen regulation"
-        return "System optimized"
+            return "Priority 4: Strengthen policy framework"
+        return "System is optimized"
 
     st.write(f"{m1}: {priority(a)}")
     st.write(f"{m2}: {priority(b)}")
+
+    with st.expander("📖 Explanation: Investment Priority"):
+        st.markdown("""
+Investment priorities are based on **system bottlenecks**.
+
+### Logic:
+- Sorting bottleneck → blocks entire recycling chain
+- Chemical gap → limits complex plastic processing
+- Thermal gap → reduces energy recovery efficiency
+- Policy gap → affects long-term system stability
+
+👉 Investment always targets weakest system layer first
+""")
 
     st.markdown("---")
 
@@ -434,15 +471,32 @@ Shows which market leads in each system component:
         s = r["Recycling"] + r["Sort"] + r["Policy"]
 
         if s > 35:
-            return "Advanced circular transition"
+            return "Advanced circular transition (closed-loop system forming)"
         elif s > 25:
-            return "Strong growth phase"
+            return "Strong growth phase (rapid infrastructure expansion)"
         elif s > 15:
-            return "Transition phase"
-        return "Early development"
+            return "Transition phase (industrialization ongoing)"
+        return "Early development phase (landfill-dependent system)"
 
     st.write(f"{m1}: {future(a)}")
     st.write(f"{m2}: {future(b)}")
+
+    with st.expander("📖 Explanation: Future Outlook"):
+        st.markdown("""
+Future outlook estimates **how fast a market can become circular**.
+
+### Based on:
+- Recycling efficiency
+- Sorting maturity
+- Policy strength
+
+### Interpretation:
+- High score → fast circular transition
+- Medium score → industrial growth phase
+- Low score → early waste management stage
+
+👉 This predicts long-term sustainability trajectory
+""")
 
     st.markdown("---")
 
@@ -452,14 +506,18 @@ Shows which market leads in each system component:
 
     st.subheader("📚 References")
 
-    with st.expander("Show References"):
-
+    with st.expander("Show Full References"):
         st.markdown("""
+### Global Policy & Reports
 - OECD (2022) — Global Plastics Outlook  
 - World Bank — What a Waste 2.0  
 - UNEP — Circular Economy Reports  
 - European Commission — Circular Economy Action Plan  
-- IEA — Waste & Energy Reports  
-- Volk et al. (2021) — LCA Plastic Recycling Study  
+- IEA — Energy & Waste Systems Reports  
+
+### Academic Sources
+- Volk et al. (2021) — Plastic Recycling LCA Study  
+
+### Regional Sources
 - Egyptian Environmental Affairs Agency (EEAA)
 """)
