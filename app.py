@@ -176,6 +176,10 @@ if page == "Dashboard":
 # MARKET ENGINE
 # =========================
 
+# =========================
+# MARKET ENGINE
+# =========================
+
 else:
 
     st.title("🌍 Market vs Market Engine (Plastic Recycling System Analysis)")
@@ -199,12 +203,12 @@ else:
         st.error("Please select two different markets.")
         st.stop()
 
-    market_map = market.set_index("Market")
+    market_map = {row["Market"]: row for _, row in market.iterrows()}
 
-    a = market_map.loc[m1]
-    b = market_map.loc[m2]
+    a = market_map[m1]
+    b = market_map[m2]
 
-    sel = pd.DataFrame([a, b], index=[m1, m2])
+    sel = pd.DataFrame([a, b])
 
     st.markdown("---")
 
@@ -214,10 +218,19 @@ else:
 
     st.subheader("📊 Recycling Rate Comparison")
 
-    fig = px.bar(sel.reset_index(), x="index", y="Recycling", text="Recycling")
+    fig = px.bar(sel, x="Market", y="Recycling", text="Recycling")
     fig.update_traces(texttemplate="%{text}%", textposition="outside")
-
     st.plotly_chart(fig, use_container_width=True)
+
+    with st.expander("📖 Explanation: Recycling Rate"):
+        st.write("""
+Recycling rate = percentage of waste successfully recycled.
+
+It reflects:
+- Collection efficiency
+- Sorting performance
+- Infrastructure maturity
+""")
 
     st.markdown("---")
 
@@ -229,21 +242,25 @@ else:
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatterpolar(
-        r=[a["Mech"], a["Chem"], a["Therm"], a["Sort"], a["Policy"]],
-        theta=["Mechanical", "Chemical", "Thermal", "Sorting", "Policy"],
-        fill="toself",
-        name=m1
-    ))
-
-    fig.add_trace(go.Scatterpolar(
-        r=[b["Mech"], b["Chem"], b["Therm"], b["Sort"], b["Policy"]],
-        theta=["Mechanical", "Chemical", "Thermal", "Sorting", "Policy"],
-        fill="toself",
-        name=m2
-    ))
+    for _, r in sel.iterrows():
+        fig.add_trace(go.Scatterpolar(
+            r=[r["Mech"], r["Chem"], r["Therm"], r["Sort"], r["Policy"]],
+            theta=["Mechanical", "Chemical", "Thermal", "Sorting", "Policy"],
+            fill="toself",
+            name=r["Market"]
+        ))
 
     st.plotly_chart(fig, use_container_width=True)
+
+    with st.expander("📖 Explanation: Radar System"):
+        st.write("""
+Shows system maturity across 5 pillars:
+- Mechanical recycling
+- Chemical recycling
+- Thermal recovery
+- Sorting system
+- Policy strength
+""")
 
     st.markdown("---")
 
@@ -253,9 +270,21 @@ else:
 
     st.subheader("📉 System Gap Analysis")
 
-    st.write(f"Recycling Gap: {b['Recycling'] - a['Recycling']}%")
-    st.write(f"Sorting Gap: {b['Sort'] - a['Sort']}")
-    st.write(f"Policy Gap: {b['Policy'] - a['Policy']}")
+    recycling_gap = b["Recycling"] - a["Recycling"]
+    sort_gap = b["Sort"] - a["Sort"]
+    policy_gap = b["Policy"] - a["Policy"]
+
+    st.write(f"Recycling Gap: {recycling_gap}%")
+    st.write(f"Sorting Gap: {sort_gap}")
+    st.write(f"Policy Gap: {policy_gap}")
+
+    with st.expander("📖 Explanation: System Gaps"):
+        st.write("""
+Gaps show differences between markets:
+- Recycling gap → output efficiency difference
+- Sorting gap → infrastructure difference
+- Policy gap → governance strength difference
+""")
 
     st.markdown("---")
 
@@ -271,40 +300,33 @@ else:
     Score = 0.30R + 0.25S + 0.25P + 0.10M + 0.10C
     """)
 
-    # =========================
-    # EXPLANATION BUTTON
-    # =========================
-
+    # EXPLANATION BUTTON (FIXED AND KEPT)
     with st.expander("📖 What do R, S, P, M, C mean?"):
 
         st.markdown("""
 ### 🟢 R = Recycling Rate
-Actual percentage of waste recycled in the system
+Final recycled waste percentage
 
 ### 🟡 S = Sorting Efficiency
-Efficiency of waste collection and separation
+How well waste is separated
 
 ### 🔵 P = Policy Strength
-Government regulation, enforcement, and circular economy laws
+Government regulation strength
 
-### 🟠 M = Mechanical Recycling
-Physical recycling infrastructure (washing, shredding, extrusion)
+### 🟠 M = Mechanical Capacity
+Physical recycling infrastructure
 
-### 🟣 C = Chemical Recycling
-Advanced recycling (pyrolysis, depolymerization, etc.)
+### 🟣 C = Chemical Capacity
+Advanced recycling technologies
 """)
 
-    # =========================
-    # SCORE FUNCTION
-    # =========================
-
-    def score(x):
+    def score(r):
         return (
-            x["Recycling"] * 0.30 +
-            x["Sort"] * 0.25 +
-            x["Policy"] * 0.25 +
-            x["Mech"] * 0.10 +
-            x["Chem"] * 0.10
+            r["Recycling"] * 0.30 +
+            r["Sort"] * 0.25 +
+            r["Policy"] * 0.25 +
+            r["Mech"] * 0.10 +
+            r["Chem"] * 0.10
         )
 
     scores = pd.DataFrame([
@@ -342,6 +364,14 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
     }.items():
         st.write(f"{name}: **{winner(a, b, key)}**")
 
+    with st.expander("📖 Explanation: Category Winners"):
+        st.write("""
+Shows which market leads in each system component:
+- Infrastructure (sorting, policy)
+- Technology (mechanical, chemical, thermal)
+- Performance (recycling)
+""")
+
     st.markdown("---")
 
     # =========================
@@ -359,9 +389,9 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
 
     def explain(level):
         if level == "Advanced Circular System":
-            return "Highly developed circular ecosystem."
+            return "Highly developed circular economy system."
         elif level == "Transition System":
-            return "System transitioning to circular economy."
+            return "Developing circular infrastructure."
         return "Early-stage waste system."
 
     m1_level = classify(a["Recycling"])
@@ -380,7 +410,7 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
 
     def priority(r):
         if r["Sort"] < 5:
-            return "Fix sorting infrastructure"
+            return "Fix sorting infrastructure first"
         elif r["Chem"] < 5:
             return "Expand chemical recycling"
         elif r["Therm"] < 5:
@@ -422,14 +452,14 @@ Advanced recycling (pyrolysis, depolymerization, etc.)
 
     st.subheader("📚 References")
 
-    if st.checkbox("Show References"):
+    with st.expander("Show References"):
 
         st.markdown("""
 - OECD (2022) — Global Plastics Outlook  
 - World Bank — What a Waste 2.0  
 - UNEP — Circular Economy Reports  
-- IEA — Plastics Energy Reports  
 - European Commission — Circular Economy Action Plan  
-- Volk et al. (2021) — Journal of Industrial Ecology  
+- IEA — Waste & Energy Reports  
+- Volk et al. (2021) — LCA Plastic Recycling Study  
 - Egyptian Environmental Affairs Agency (EEAA)
 """)
