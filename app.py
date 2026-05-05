@@ -3,17 +3,61 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# =======================================================
-# PAGE CONFIG
-# =======================================================
 st.set_page_config(
-    page_title="Plastic Recycling Market Engine",
+    page_title="Egypt Plastic Recycling Comparison",
+    page_icon="♻️",
     layout="wide"
 )
 
 # =======================================================
-# MARKET DATA (UPDATED - Global removed + Saudi added)
+# DASHBOARD DATA (UNCHANGED)
 # =======================================================
+
+EUR_TO_EGP = 62.669
+
+df = pd.DataFrame([
+    {
+        "Method": "Mechanical Recycling",
+        "Favorite Plastic Type": "PET, HDPE, PP - clean and sorted",
+        "Efficiency (%)": 88,
+        "Gross GWP kg CO2e/kg": 0.67,
+        "Gross CED MJ/kg": 3.83,
+        "Gross Cost EUR/kg": 0.10,
+        "Net GWP kg CO2e/kg": 0.18,
+        "Net CED MJ/kg": -18.14,
+        "Net Cost EUR/kg": -0.16,
+    },
+    {
+        "Method": "Chemical Recycling - Pyrolysis",
+        "Favorite Plastic Type": "Mixed PE, PP, PS",
+        "Efficiency (%)": 75,
+        "Gross GWP kg CO2e/kg": 0.96,
+        "Gross CED MJ/kg": 15.66,
+        "Gross Cost EUR/kg": 0.33,
+        "Net GWP kg CO2e/kg": 0.25,
+        "Net CED MJ/kg": -15.92,
+        "Net Cost EUR/kg": -0.24,
+    },
+    {
+        "Method": "Hybrid Mechanical + Chemical",
+        "Favorite Plastic Type": "Mixed + sorted streams",
+        "Efficiency (%)": 82,
+        "Gross GWP kg CO2e/kg": 0.48,
+        "Gross CED MJ/kg": 13.32,
+        "Gross Cost EUR/kg": 0.14,
+        "Net GWP kg CO2e/kg": -0.22,
+        "Net CED MJ/kg": -30.14,
+        "Net Cost EUR/kg": -0.29,
+    }
+])
+
+df["Gross Cost EGP/kg"] = df["Gross Cost EUR/kg"] * EUR_TO_EGP
+df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
+
+# =======================================================
+# MARKET DATA (UPDATED)
+# =======================================================
+
 market = pd.DataFrame([
     {"Market": "Egypt", "Recycling": 12, "Mech": 7, "Chem": 3, "Therm": 4, "Sort": 4, "Policy": 5, "Conf": "High"},
     {"Market": "EU", "Recycling": 35, "Mech": 8, "Chem": 7, "Therm": 6, "Sort": 9, "Policy": 9, "Conf": "High"},
@@ -28,26 +72,47 @@ market = pd.DataFrame([
 # =======================================================
 # SIDEBAR
 # =======================================================
-page = st.sidebar.radio("Navigation", ["Market Engine"])
+
+page = st.sidebar.radio("Navigation", ["Dashboard", "Market Engine"])
 
 # =======================================================
-# MARKET ENGINE
+# DASHBOARD (NO CHANGES)
 # =======================================================
-if page == "Market Engine":
 
-    st.title("🌍 Plastic Waste Market Comparison Engine")
+if page == "Dashboard":
+
+    st.title("♻️ Plastic Recycling Pathway Analysis")
+
+    waste = st.number_input("Waste input (kg)", 100, 1000000, 10000)
+
+    df["Output"] = waste * df["Efficiency (%)"] / 100
+    df["CO2"] = waste * df["Net GWP kg CO2e/kg"]
+    df["Cost"] = waste * df["Net Cost EGP/kg"]
+
+    st.subheader("Efficiency Comparison")
+    st.plotly_chart(px.bar(df, x="Method", y="Efficiency (%)"))
+
+    st.subheader("Carbon Impact")
+    st.plotly_chart(px.bar(df, x="Method", y="CO2"))
+
+    st.subheader("Cost Analysis")
+    st.plotly_chart(px.bar(df, x="Method", y="Cost"))
+
+# =======================================================
+# 🌍 MARKET ENGINE (FIXED + UPGRADED)
+# =======================================================
+
+else:
+
+    st.title("🌍 Market vs Market Plastic Waste Engine")
 
     st.markdown("""
-    This engine compares two markets across recycling performance,
-    system maturity, and waste management structure.
+    Compare two countries based on plastic waste systems, recycling performance, and infrastructure maturity.
     """)
 
     st.divider()
 
-    # ===================================================
-    # MARKET SELECTION
-    # ===================================================
-    st.subheader("📍 Select Markets")
+    # ---------------- SELECT MARKETS ----------------
 
     col1, col2 = st.columns(2)
 
@@ -63,15 +128,16 @@ if page == "Market Engine":
 
     sel = market[market["Market"].isin([m1, m2])].copy()
 
-    # FIX: safe indexing (NO iloc bug)
+    # ✅ FIX BUG (NO iloc mismatch)
     a = sel[sel["Market"] == m1].iloc[0]
     b = sel[sel["Market"] == m2].iloc[0]
 
     st.divider()
 
     # ===================================================
-    # 1. RECYCLING SCALE (FIXED BUG HERE)
+    # 1. RECYCLING SCALE (FIXED)
     # ===================================================
+
     st.subheader("🌍 Recycling Scale Comparison")
 
     scale_df = pd.DataFrame([
@@ -79,28 +145,19 @@ if page == "Market Engine":
         {"Market": m2, "Recycling Rate": b["Recycling"]}
     ])
 
-    fig = px.bar(
-        scale_df,
-        x="Market",
-        y="Recycling Rate",
-        text="Recycling Rate",
-        title="Plastic Recycling Rate Comparison"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(px.bar(scale_df, x="Market", y="Recycling Rate", text="Recycling Rate"))
 
     st.info("""
-    💡 Interpretation:
-    Recycling rate shows how much plastic waste is successfully recovered.
-
-    Higher value = stronger circular economy performance.
+    Recycling rate shows how much plastic waste is recovered and reprocessed.
+    Higher values = stronger circular economy system.
     """)
 
     st.divider()
 
     # ===================================================
-    # 2. SYSTEM RADAR
+    # 2. RADAR SYSTEM
     # ===================================================
+
     st.subheader("🧭 System Maturity Radar")
 
     fig = go.Figure()
@@ -113,18 +170,17 @@ if page == "Market Engine":
             name=r["Market"]
         ))
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
     st.info("""
-    💡 Radar Meaning:
+    Radar interpretation:
+    - Mechanical → clean recycling strength
+    - Chemical → advanced processing capability
+    - Thermal → mixed waste dependency
+    - Sorting → collection efficiency
+    - Policy → governance strength
 
-    - Mechanical → clean recycling strength  
-    - Chemical → advanced material recovery  
-    - Thermal → mixed waste dependence  
-    - Sorting → collection efficiency  
-    - Policy → governance strength  
-
-    Bigger balanced shape = more mature circular system.
+    Larger balanced shape = more advanced circular system.
     """)
 
     st.divider()
@@ -132,60 +188,51 @@ if page == "Market Engine":
     # ===================================================
     # 3. GAP ANALYSIS
     # ===================================================
+
     st.subheader("📉 System Gap Analysis")
 
     st.write(f"Recycling Gap: {b['Recycling'] - a['Recycling']}%")
     st.write(f"Sorting Gap: {b['Sort'] - a['Sort']}")
     st.write(f"Policy Gap: {b['Policy'] - a['Policy']}")
 
-    st.markdown("""
-    💡 Interpretation:
-
-    - Recycling gap → overall system efficiency difference  
-    - Sorting gap → infrastructure difference  
-    - Policy gap → regulation strength difference  
-    """)
-
     st.divider()
 
     # ===================================================
-    # 4. ENGINEERING INTERPRETATION (FIXED - NO BIAS)
+    # 4. ENGINEERING INTERPRETATION (FIXED)
     # ===================================================
+
     st.subheader("🧠 Engineering Interpretation")
 
-    def compare(metric_name, key):
+    def compare(name, key):
+        av = a[key]
+        bv = b[key]
 
-        a_val = a[key]
-        b_val = b[key]
-
-        if a_val == b_val:
-            st.write(f"⚖️ Both markets are equal in {metric_name}")
+        if av == bv:
+            st.write(f"⚖️ Equal performance in {name}")
             return
 
-        better = m1 if a_val > b_val else m2
-        gap = abs(a_val - b_val)
-
-        st.write(f"✔ {better} performs better in {metric_name} (gap: {gap})")
+        better = m1 if av > bv else m2
+        st.write(f"✔ {better} is stronger in {name}")
 
     compare("Recycling Efficiency", "Recycling")
     compare("Sorting System", "Sort")
     compare("Policy Strength", "Policy")
     compare("Mechanical Recycling", "Mech")
     compare("Chemical Recycling", "Chem")
-    compare("Thermal Dependency", "Therm")
+    compare("Thermal Treatment", "Therm")
 
     st.info("""
-    💡 Key Insight:
-    Waste systems are multi-layered.
-    No single country is “best” overall — performance depends on system component.
+    System performance depends on integration of:
+    policy + infrastructure + technology, not one factor alone.
     """)
 
     st.divider()
 
     # ===================================================
-    # 5. DATA CONFIDENCE
+    # 5. CONFIDENCE LEVEL
     # ===================================================
-    st.subheader("🔍 Data Confidence Level")
+
+    st.subheader("🔍 Data Confidence")
 
     conf_map = {"High": 3, "Medium": 2, "Low": 1}
 
@@ -196,24 +243,12 @@ if page == "Market Engine":
         text="Conf"
     ))
 
-    st.info("""
-    💡 Meaning:
-    Higher confidence = more reliable data sources and lower uncertainty.
-    """)
-
     st.divider()
 
     # ===================================================
-    # 6. FINAL CONCLUSION
+    # 6. FINAL RESULT
     # ===================================================
-    st.subheader("🏁 Final Conclusion")
 
     winner = sel.loc[sel["Recycling"].idxmax(), "Market"]
 
-    st.success(f"""
-    Overall Winner (based on recycling rate):
-
-    🏆 {winner}
-
-    This reflects stronger circular economy performance and better system efficiency.
-    """)
+    st.success(f"🏆 Overall stronger circular system: {winner}")
