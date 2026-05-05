@@ -505,23 +505,23 @@ with st.expander("Show References"):
     st.markdown("""
 ### 🌍 Global Policy & Reports
 
-- OECD (2022) — *Global Plastics Outlook*  
-- World Bank — *What a Waste 2.0*  
-- United Nations Environment Programme (UNEP) — *Circular Economy Reports*  
-- European Commission — *Circular Economy Action Plan*  
-- International Energy Agency (IEA) — *Energy & Waste Systems Reports*  
+- [OECD (2022) — Global Plastics Outlook](https://www.oecd.org/environment/plastics/plastics-outlook/)  
+- [World Bank — What a Waste 2.0](https://datatopics.worldbank.org/what-a-waste/)  
+- [UNEP — Circular Economy Reports](https://www.unep.org/explore-topics/resource-efficiency/what-we-do/circular-economy)  
+- [European Commission — Circular Economy Action Plan](https://environment.ec.europa.eu/strategy/circular-economy-action-plan_en)  
+- [IEA — Energy & Waste Systems Reports](https://www.iea.org/topics/waste)  
 
 
 ---
 
 ### 📖 Academic Sources
 
-- Volk et al. (2021) — *Plastic Recycling Life Cycle Assessment (LCA) Study*  
+- [Volk et al. (2021) — Plastic Recycling LCA Study](https://doi.org/10.1111/jiec.13075)  
 
 
 ---
 
 ### 🇪🇬 Regional Sources
 
-- Egyptian Environmental Affairs Agency (EEAA)
+- [Egyptian Environmental Affairs Agency (EEAA)](http://www.eeaa.gov.eg/)
 """)
