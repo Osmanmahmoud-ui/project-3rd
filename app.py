@@ -55,10 +55,12 @@ df["Gross Cost EGP/kg"] = df["Gross Cost EUR/kg"] * EUR_TO_EGP
 df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
 
 # -------------------------------------------------------
-# Sidebar
+# Sidebar Navigation
 # -------------------------------------------------------
 
 st.sidebar.title("Navigation")
+
+# Market Engine tab removed
 page = st.sidebar.radio("Select Page", ["Dashboard"])
 
 # -------------------------------------------------------
@@ -83,7 +85,10 @@ if page == "Dashboard":
     with col2:
         waste_input = st.number_input(
             "Plastic waste input (kg):",
-            100, 10_000_000, 10000, 100
+            min_value=100,
+            max_value=10_000_000,
+            value=10000,
+            step=100
         )
 
     mode = st.radio(
@@ -117,59 +122,150 @@ if page == "Dashboard":
     filtered["Total Cost"] = waste_input * filtered["Cost"]
 
     # ---------------------------------------------------
-    # 🔒 STATIC CHART CONFIG (IMPORTANT FIX)
+    # Static Chart Configuration
     # ---------------------------------------------------
+
     chart_config = {
-        "displayModeBar": False,   # removes toolbar
-        "staticPlot": True         # disables zoom/hover/click
+        "displayModeBar": False,
+        "staticPlot": True
     }
 
-    # ---------------- Efficiency ----------------
+    # ---------------------------------------------------
+    # 1. Efficiency Comparison
+    # ---------------------------------------------------
+
     st.header("1. Efficiency Comparison")
 
-    fig1 = px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)")
-    fig1.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+    fig1 = px.bar(
+        filtered,
+        x="Method",
+        y="Efficiency (%)",
+        text="Efficiency (%)"
+    )
 
-    st.plotly_chart(fig1, use_container_width=True, config=chart_config)
+    fig1.update_traces(
+        texttemplate="%{text:.0f}%",
+        textposition="outside"
+    )
 
-    # ---------------- Environmental ----------------
+    fig1.update_layout(
+        xaxis_title="Recycling Method",
+        yaxis_title="Efficiency (%)"
+    )
+
+    st.plotly_chart(
+        fig1,
+        use_container_width=True,
+        config=chart_config
+    )
+
+    # ---------------------------------------------------
+    # 2. Environmental Impact
+    # ---------------------------------------------------
+
     st.header("2. Environmental Impact")
 
-    fig2 = px.bar(filtered, x="Method", y="GWP", text="GWP")
-    fig2.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    fig2 = px.bar(
+        filtered,
+        x="Method",
+        y="GWP",
+        text="GWP",
+        title="Global Warming Potential"
+    )
 
-    st.plotly_chart(fig2, use_container_width=True, config=chart_config)
+    fig2.update_traces(
+        texttemplate="%{text:.2f}",
+        textposition="outside"
+    )
 
-    fig3 = px.bar(filtered, x="Method", y="CED", text="CED")
-    fig3.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    fig2.update_layout(
+        xaxis_title="Recycling Method",
+        yaxis_title="kg CO2e/kg plastic"
+    )
 
-    st.plotly_chart(fig3, use_container_width=True, config=chart_config)
+    st.plotly_chart(
+        fig2,
+        use_container_width=True,
+        config=chart_config
+    )
 
-    # ---------------- Economic ----------------
+    fig3 = px.bar(
+        filtered,
+        x="Method",
+        y="CED",
+        text="CED",
+        title="Cumulative Energy Demand"
+    )
+
+    fig3.update_traces(
+        texttemplate="%{text:.2f}",
+        textposition="outside"
+    )
+
+    fig3.update_layout(
+        xaxis_title="Recycling Method",
+        yaxis_title="MJ/kg plastic"
+    )
+
+    st.plotly_chart(
+        fig3,
+        use_container_width=True,
+        config=chart_config
+    )
+
+    # ---------------------------------------------------
+    # 3. Economic Impact
+    # ---------------------------------------------------
+
     st.header("3. Economic Impact")
 
-    fig4 = px.bar(filtered, x="Method", y="Cost", text="Cost")
-    fig4.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    fig4 = px.bar(
+        filtered,
+        x="Method",
+        y="Cost",
+        text="Cost",
+        title="Cost Comparison"
+    )
 
-    st.plotly_chart(fig4, use_container_width=True, config=chart_config)
+    fig4.update_traces(
+        texttemplate="%{text:.2f}",
+        textposition="outside"
+    )
 
-    # ---------------- Scenario Table ----------------
+    fig4.update_layout(
+        xaxis_title="Recycling Method",
+        yaxis_title="Cost / Saving EGP per kg"
+    )
+
+    st.plotly_chart(
+        fig4,
+        use_container_width=True,
+        config=chart_config
+    )
+
+    # ---------------------------------------------------
+    # 4. Scenario Results
+    # ---------------------------------------------------
+
     st.header("4. Scenario Results")
 
-    st.dataframe(filtered[[
-        "Method",
-        "Recovered Output",
-        "GWP",
-        "Total CO2e",
-        "CED",
-        "Total CED",
-        "Cost",
-        "Total Cost"
-    ]].round(2), use_container_width=True)
+    st.dataframe(
+        filtered[[
+            "Method",
+            "Recovered Output",
+            "GWP",
+            "Total CO2e",
+            "CED",
+            "Total CED",
+            "Cost",
+            "Total Cost"
+        ]].round(2),
+        use_container_width=True
+    )
 
-    # -------------------------------------------------------
-    # REFERENCES
-    # -------------------------------------------------------
+    # ---------------------------------------------------
+    # 5. References
+    # ---------------------------------------------------
 
     st.header("5. References")
 
