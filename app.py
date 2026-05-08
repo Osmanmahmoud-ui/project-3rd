@@ -14,6 +14,15 @@ st.set_page_config(
 )
 
 # =========================
+# PLOTLY STATIC CONFIG
+# =========================
+
+PLOT_CONFIG = {
+    "displayModeBar": False,
+    "staticPlot": True
+}
+
+# =========================
 # DATA
 # =========================
 
@@ -116,7 +125,8 @@ if page == "Dashboard":
 
     st.plotly_chart(
         px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)"),
-        use_container_width=True
+        use_container_width=True,
+        config=PLOT_CONFIG
     )
 
     # =========================
@@ -127,12 +137,14 @@ if page == "Dashboard":
 
     st.plotly_chart(
         px.bar(filtered, x="Method", y="GWP kg CO2e/kg", text="GWP kg CO2e/kg"),
-        use_container_width=True
+        use_container_width=True,
+        config=PLOT_CONFIG
     )
 
     st.plotly_chart(
         px.bar(filtered, x="Method", y="CED MJ/kg", text="CED MJ/kg"),
-        use_container_width=True
+        use_container_width=True,
+        config=PLOT_CONFIG
     )
 
     # =========================
@@ -143,7 +155,8 @@ if page == "Dashboard":
 
     st.plotly_chart(
         px.bar(filtered, x="Method", y="Cost EGP/kg", text="Cost EGP/kg"),
-        use_container_width=True
+        use_container_width=True,
+        config=PLOT_CONFIG
     )
 
     # =========================
@@ -211,7 +224,12 @@ else:
 
     fig = px.bar(sel, x="Market", y="Recycling", text="Recycling")
     fig.update_traces(texttemplate="%{text}%", textposition="outside")
-    st.plotly_chart(fig, use_container_width=True)
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config=PLOT_CONFIG
+    )
 
     with st.expander("📖 Engineering Interpretation"):
         st.write("""
@@ -243,7 +261,11 @@ It reflects:
             name=r["Market"]
         ))
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config=PLOT_CONFIG
+    )
 
     with st.expander("📖 Engineering Interpretation"):
         st.write("""
@@ -326,8 +348,11 @@ This model converts system complexity into a single performance score:
         {"Market": m2, "Score": score(b)}
     ])
 
-    st.plotly_chart(px.bar(scores, x="Market", y="Score", text="Score"),
-                    use_container_width=True)
+    st.plotly_chart(
+        px.bar(scores, x="Market", y="Score", text="Score"),
+        use_container_width=True,
+        config=PLOT_CONFIG
+    )
 
     st.markdown("---")
 
@@ -488,28 +513,26 @@ Investment logic identifies **system bottlenecks**:
 
     st.subheader("📚 References")
 
-with st.expander("Show References"):
+    with st.expander("Show References"):
 
-    st.markdown("""
+        st.markdown("""
 ### 🌍 Global Policy & Reports
 
-- [OECD (2022) — Global Plastics Outlook](https://www.oecd.org/environment/plastics/plastics-outlook/)  
-- [World Bank — What a Waste 2.0](https://datatopics.worldbank.org/what-a-waste/)  
-- [UNEP — Circular Economy Reports](https://www.unep.org/explore-topics/resource-efficiency/what-we-do/circular-economy)  
-- [European Commission — Circular Economy Action Plan](https://environment.ec.europa.eu/strategy/circular-economy-action-plan_en)  
-- [IEA — Energy & Waste Systems Reports](https://www.iea.org/topics/waste)  
-
+- OECD (2022) — Global Plastics Outlook  
+- World Bank — What a Waste 2.0  
+- UNEP — Circular Economy Reports  
+- European Commission — Circular Economy Action Plan  
+- IEA — Energy & Waste Systems Reports  
 
 ---
 
 ### 📖 Academic Sources
 
-- [Volk et al. (2021) — Plastic Recycling LCA Study](https://doi.org/10.1111/jiec.13075)  
-
+- Volk et al. (2021) — Plastic Recycling LCA Study  
 
 ---
 
 ### 🇪🇬 Regional Sources
 
-- [Egyptian Environmental Affairs Agency (EEAA)](http://www.eeaa.gov.eg/)
+- Egyptian Environmental Affairs Agency (EEAA)
 """)
