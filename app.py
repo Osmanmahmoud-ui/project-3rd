@@ -53,11 +53,7 @@ market = pd.DataFrame([
 
 page = st.sidebar.radio(
     "Navigation",
-    [
-        "📊 Dashboard Overview",
-        "🌍 Market Analysis",
-        "📚 References"
-    ]
+    ["Dashboard", "Market Engine"]
 )
 # =========================
 # DASHBOARD (FIXED)
