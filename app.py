@@ -24,43 +24,52 @@ df = pd.DataFrame([
         "Method": "Mechanical Recycling",
         "Favorite Plastic Type": "PET, HDPE, PP - clean and sorted",
         "Efficiency (%)": 88,
+
         "Gross GWP kg CO2e/kg": 0.67,
         "Gross CED MJ/kg": 3.83,
         "Gross Cost EUR/kg": 0.10,
+
         "Net GWP kg CO2e/kg": 0.18,
         "Net CED MJ/kg": -18.14,
         "Net Cost EUR/kg": -0.16,
+
         "Clean Score": 9,
         "Egypt Suitability": "Very High",
-        "Reason": "Best for clean sorted plastics; low energy and low GWP compared with other pathways."
+        "Reason": "Best for clean sorted plastics."
     },
     {
         "Method": "Chemical Recycling - Pyrolysis",
-        "Favorite Plastic Type": "Mixed PE, PP, PS and RDF-like plastic fractions",
+        "Favorite Plastic Type": "Mixed PE, PP, PS",
         "Efficiency (%)": 75,
+
         "Gross GWP kg CO2e/kg": 0.96,
         "Gross CED MJ/kg": 15.66,
         "Gross Cost EUR/kg": 0.33,
+
         "Net GWP kg CO2e/kg": 0.25,
         "Net CED MJ/kg": -15.92,
         "Net Cost EUR/kg": -0.24,
+
         "Clean Score": 6,
         "Egypt Suitability": "Medium",
-        "Reason": "Useful for mixed plastic and chemical feedstock recovery, but requires higher energy and more advanced operation."
+        "Reason": "Useful for mixed plastic waste."
     },
     {
         "Method": "Combined Mechanical + Chemical Recycling",
-        "Favorite Plastic Type": "Sorted recyclable plastics plus residues for pyrolysis",
+        "Favorite Plastic Type": "Mixed + residues",
         "Efficiency (%)": 82,
+
         "Gross GWP kg CO2e/kg": 0.48,
         "Gross CED MJ/kg": 13.32,
         "Gross Cost EUR/kg": 0.14,
+
         "Net GWP kg CO2e/kg": -0.22,
         "Net CED MJ/kg": -30.14,
         "Net Cost EUR/kg": -0.29,
+
         "Clean Score": 10,
         "Egypt Suitability": "High",
-        "Reason": "Highest circularity potential because recyclable plastics are mechanically recycled and residues are chemically recycled."
+        "Reason": "Highest circularity potential."
     }
 ])
 
@@ -68,39 +77,36 @@ df["Gross Cost EGP/kg"] = df["Gross Cost EUR/kg"] * EUR_TO_EGP
 df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
 
 # -------------------------------------------------------
-# Sidebar Navigation
+# Sidebar Navigation (ONLY Dashboard)
 # -------------------------------------------------------
 
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Select Page", ["Dashboard"])
 
 # -------------------------------------------------------
-# DASHBOARD
+# DASHBOARD ONLY
 # -------------------------------------------------------
 
 if page == "Dashboard":
 
-    st.title("♻️ Environmental and Economic Comparison of Plastic Recycling Pathways")
-    st.caption("Egypt-focused dashboard based on Volk et al. (2021) and engineering benchmarks")
+    st.title("♻️ Plastic Recycling Pathways - Egypt Comparison")
 
-    st.markdown("## Dashboard Inputs")
+    # ---------------- Inputs ----------------
+    st.markdown("## Inputs")
 
-    col1, col2 = st.columns([2, 1])
+    input_col1, input_col2 = st.columns([2, 1])
 
-    with col1:
+    with input_col1:
         selected_methods = st.multiselect(
             "Choose recycling pathways:",
             df["Method"].tolist(),
-            default=df["Method"].tolist()
+            df["Method"].tolist()
         )
 
-    with col2:
+    with input_col2:
         waste_input = st.number_input(
-            "Plastic waste input (kg)",
-            min_value=100,
-            max_value=10_000_000,
-            value=10000,
-            step=100
+            "Plastic waste input (kg):",
+            100, 10_000_000, 10000, 100
         )
 
     accounting_mode = st.radio(
@@ -112,7 +118,7 @@ if page == "Dashboard":
     filtered = df[df["Method"].isin(selected_methods)].copy()
 
     if filtered.empty:
-        st.error("Please select at least one method.")
+        st.error("Select at least one method.")
         st.stop()
 
     if accounting_mode == "Gross impact":
@@ -129,84 +135,58 @@ if page == "Dashboard":
     filtered["Cost"] = filtered[cost_col]
 
     filtered["Recovered Output (kg)"] = waste_input * filtered["Efficiency (%)"] / 100
-    filtered["Total CO2e (kg)"] = waste_input * filtered["GWP"]
-    filtered["Total CED (MJ)"] = waste_input * filtered["CED"]
-    filtered["Total Cost (EGP)"] = waste_input * filtered["Cost"]
+    filtered["Total CO2e"] = waste_input * filtered["GWP"]
+    filtered["Total CED"] = waste_input * filtered["CED"]
+    filtered["Total Cost"] = waste_input * filtered["Cost"]
 
-    st.header("1. Scenario Summary")
+    # ---------------- Efficiency ----------------
+    st.header("1. Efficiency Comparison")
 
-    col1, col2, col3, col4 = st.columns(4)
+    fig_eff = px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)")
+    fig_eff.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+    st.plotly_chart(fig_eff, use_container_width=True)
 
-    col1.metric("Waste Input", f"{waste_input:,} kg")
-    col2.metric("Best Efficiency", f"{filtered['Efficiency (%)'].max():.0f}%")
-    col3.metric("Lowest GWP", f"{filtered['GWP'].min():.2f}")
-    col4.metric("Lowest Cost", f"{filtered['Cost'].min():.2f} EGP/kg")
+    # ---------------- Environmental ----------------
+    st.header("2. Environmental Impact")
 
-    st.header("2. Technical Comparison")
+    fig_gwp = px.bar(filtered, x="Method", y="GWP", text="GWP")
+    fig_gwp.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    st.plotly_chart(fig_gwp, use_container_width=True)
 
-    for _, r in filtered.iterrows():
-        st.info(f"{r['Method']} → {r['Favorite Plastic Type']}")
+    fig_ced = px.bar(filtered, x="Method", y="CED", text="CED")
+    fig_ced.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    st.plotly_chart(fig_ced, use_container_width=True)
 
-    st.plotly_chart(
-        px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)"),
-        use_container_width=True
-    )
+    # ---------------- Economic ----------------
+    st.header("3. Economic Impact")
 
-    st.header("3. Environmental Effects")
+    fig_cost = px.bar(filtered, x="Method", y="Cost", text="Cost")
+    fig_cost.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    st.plotly_chart(fig_cost, use_container_width=True)
 
-    st.plotly_chart(
-        px.bar(filtered, x="Method", y="GWP", text="GWP"),
-        use_container_width=True
-    )
-
-    st.plotly_chart(
-        px.bar(filtered, x="Method", y="CED", text="CED"),
-        use_container_width=True
-    )
-
-    st.header("4. Economic Effects")
-
-    st.plotly_chart(
-        px.bar(filtered, x="Method", y="Cost", text="Cost"),
-        use_container_width=True
-    )
-
-    st.header("5. Results Table")
+    # ---------------- Scenario Table ----------------
+    st.header("4. Scenario Results")
 
     st.dataframe(filtered[[
         "Method",
         "Recovered Output (kg)",
         "GWP",
-        "Total CO2e (kg)",
+        "Total CO2e",
         "CED",
-        "Total CED (MJ)",
+        "Total CED",
         "Cost",
-        "Total Cost (EGP)"
+        "Total Cost"
     ]].round(2), use_container_width=True)
 
-    st.header("6. Data Sources and Methodology")
+    # ---------------- Favorite Plastic ----------------
+    st.header("5. Suitable Plastic Types")
 
-    st.markdown("""
-**Main reference:**
+    for _, row in filtered.iterrows():
+        st.info(f"{row['Method']} → {row['Favorite Plastic Type']}")
 
-Volk et al. (2021) — Techno-economic assessment of plastic recycling pathways
+    # ---------------- Recommendation ----------------
+    st.header("6. Best Option")
 
-**Supporting frameworks:**
-- UNEP circular economy reports
-- IEA waste & energy system reports
-- European Commission circular economy strategy
+    best = filtered.sort_values(["GWP", "CED", "Cost"]).iloc[0]
 
-**Equations used:**
-
-Recovered Output = Waste Input × Efficiency / 100  
-Total GWP = Waste Input × GWP factor  
-Total CED = Waste Input × CED factor  
-Cost EGP/kg = Cost EUR/kg × Exchange Rate  
-Total Cost = Waste Input × Cost EGP/kg  
-""")
-
-    st.header("7. Engineering Recommendation")
-
-    best = filtered.sort_values(by=["GWP", "CED", "Cost"]).iloc[0]
-
-    st.success(f"Recommended pathway: {best['Method']}")
+    st.success(f"Recommended pathway: **{best['Method']}**")
