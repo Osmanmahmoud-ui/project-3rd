@@ -159,7 +159,7 @@ if page == "Dashboard":
         config=PLOT_CONFIG
     )
 
-    # =========================
+        # =========================
     # RESULTS
     # =========================
 
@@ -180,6 +180,44 @@ if page == "Dashboard":
         ].round(2),
         use_container_width=True
     )
+
+    st.markdown("---")
+
+    # =========================
+    # REFERENCES
+    # =========================
+
+    st.subheader("📚 References")
+
+    with st.expander("Show References"):
+
+        st.markdown("""
+### 🌍 Global Policy & Reports
+
+- OECD (2022) — Global Plastics Outlook  
+- World Bank — What a Waste 2.0  
+- UNEP — Circular Economy Reports  
+- European Commission — Circular Economy Action Plan  
+- IEA — Energy & Waste Systems Reports  
+
+---
+
+### 📖 Academic Sources
+
+- Volk et al. (2021) — Plastic Recycling LCA Study  
+
+---
+
+### 🇪🇬 Regional Sources
+
+- Egyptian Environmental Affairs Agency (EEAA)
+""")
+
+# =========================
+# MARKET ENGINE
+# =========================
+
+else:
 
 # =========================
 # MARKET ENGINE
