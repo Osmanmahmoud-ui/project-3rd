@@ -51,35 +51,14 @@ market = pd.DataFrame([
 # NAVIGATION
 # =========================
 
-page = st.sidebar.radio("Navigation", ["Dashboard", "Market Engine"])
-
-st.sidebar.title("♻️ System Navigation")
-
-if page == "Dashboard":
-    st.sidebar.markdown("""
-    ## 📊 Dashboard Sections
-    - [Scenario Summary](#scenario-summary)
-    - [Technical Comparison](#technical-comparison)
-    - [Environmental Effects](#environmental-effects)
-    - [Economic Effects](#economic-effects)
-    - [Results Table](#results-table)
-    - [References](#references)
-    """)
-
-else:
-    st.sidebar.markdown("""
-    ## 🌍 Market Engine Sections
-    - [Market Selection](#market-selection)
-    - [Recycling Rate](#recycling-rate-comparison)
-    - [System Radar](#system-radar)
-    - [Gap Analysis](#system-gap-analysis)
-    - [MCDA Score](#overall-market-score-index)
-    - [Category Winners](#category-winners)
-    - [Winner Summary](#engineering-winner-summary)
-    - [Classification](#system-classification)
-    - [Investment Map](#investment-priority-map)
-    - [References](#market-references)
-    """)
+page = st.sidebar.radio(
+    "Navigation",
+    [
+        "📊 Dashboard Overview",
+        "🌍 Market Analysis",
+        "📚 References"
+    ]
+)
 # =========================
 # DASHBOARD (FIXED)
 # =========================
