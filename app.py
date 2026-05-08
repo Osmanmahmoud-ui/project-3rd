@@ -117,16 +117,36 @@ if page == "Dashboard":
     filtered["Total Cost"] = waste_input * filtered["Cost"]
 
     # ---------------------------------------------------
-    # Static chart configuration
+    # 🔒 STATIC CHART CONFIG (IMPORTANT FIX)
     # ---------------------------------------------------
-
     chart_config = {
-        "displayModeBar": False,
-        "staticPlot": True
+        "displayModeBar": False,   # removes toolbar
+        "staticPlot": True         # disables zoom/hover/click
     }
 
+    # ---------------- Efficiency ----------------
+    st.header("1. Efficiency Comparison")
+
+    fig1 = px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)")
+    fig1.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+
+    st.plotly_chart(fig1, use_container_width=True, config=chart_config)
+
+    # ---------------- Environmental ----------------
+    st.header("2. Environmental Impact")
+
+    fig2 = px.bar(filtered, x="Method", y="GWP", text="GWP")
+    fig2.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+
+    st.plotly_chart(fig2, use_container_width=True, config=chart_config)
+
+    fig3 = px.bar(filtered, x="Method", y="CED", text="CED")
+    fig3.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+
+    st.plotly_chart(fig3, use_container_width=True, config=chart_config)
+
     # ---------------- Economic ----------------
-    st.header("1. Economic Impact")
+    st.header("3. Economic Impact")
 
     fig4 = px.bar(filtered, x="Method", y="Cost", text="Cost")
     fig4.update_traces(texttemplate="%{text:.2f}", textposition="outside")
@@ -134,7 +154,7 @@ if page == "Dashboard":
     st.plotly_chart(fig4, use_container_width=True, config=chart_config)
 
     # ---------------- Scenario Table ----------------
-    st.header("2. Scenario Results")
+    st.header("4. Scenario Results")
 
     st.dataframe(filtered[[
         "Method",
@@ -151,7 +171,7 @@ if page == "Dashboard":
     # REFERENCES
     # -------------------------------------------------------
 
-    st.header("3. References")
+    st.header("5. References")
 
     st.markdown("""
     - Volk et al. (2021) — Techno-economic assessment of plastic recycling pathways  
