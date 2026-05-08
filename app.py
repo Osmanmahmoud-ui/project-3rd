@@ -60,7 +60,7 @@ df["Net Cost EGP/kg"] = df["Net Cost EUR/kg"] * EUR_TO_EGP
 
 st.sidebar.title("Navigation")
 
-# Market Engine tab removed
+# Only Dashboard page available (Market Engine tab removed)
 page = st.sidebar.radio("Select Page", ["Dashboard"])
 
 # -------------------------------------------------------
