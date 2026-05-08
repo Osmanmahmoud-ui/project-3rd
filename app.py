@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="Egypt Plastic Recycling Comparison",
@@ -21,6 +22,7 @@ EUR_TO_EGP = 62.669
 df = pd.DataFrame([
     {
         "Method": "Mechanical Recycling",
+        "Favorite Plastic Type": "PET, HDPE, PP - clean and sorted",
         "Efficiency (%)": 88,
         "Gross GWP kg CO2e/kg": 0.67,
         "Gross CED MJ/kg": 3.83,
@@ -30,7 +32,8 @@ df = pd.DataFrame([
         "Net Cost EUR/kg": -0.16,
     },
     {
-        "Method": "Chemical Recycling - Pyrolysis",
+        "Method": "Pyrolysis",
+        "Favorite Plastic Type": "Mixed PE, PP, PS",
         "Efficiency (%)": 75,
         "Gross GWP kg CO2e/kg": 0.96,
         "Gross CED MJ/kg": 15.66,
@@ -40,7 +43,8 @@ df = pd.DataFrame([
         "Net Cost EUR/kg": -0.24,
     },
     {
-        "Method": "Combined Mechanical + Chemical Recycling",
+        "Method": "Hybrid System",
+        "Favorite Plastic Type": "Mixed + sorted streams",
         "Efficiency (%)": 82,
         "Gross GWP kg CO2e/kg": 0.48,
         "Gross CED MJ/kg": 13.32,
@@ -66,26 +70,20 @@ page = st.sidebar.radio("Select Page", ["Dashboard"])
 # -------------------------------------------------------
 
 if page == "Dashboard":
+    st.title("♻️ Plastic Recycling Comparison Dashboard")
 
-    st.title("♻️ Plastic Recycling Pathways - Egypt Comparison")
+    selected_methods = st.multiselect(
+        "Select pathways:",
+        df["Method"].tolist(),
+        default=df["Method"].tolist()
+    )
 
-    # ---------------- Inputs ----------------
-    st.markdown("## Inputs")
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        selected_methods = st.multiselect(
-            "Choose recycling pathways:",
-            df["Method"].tolist(),
-            df["Method"].tolist()
-        )
-
-    with col2:
-        waste_input = st.number_input(
-            "Plastic waste input (kg):",
-            100, 10_000_000, 10000, 100
-        )
+    waste_input = st.number_input(
+        "Waste input (kg)",
+        min_value=100,
+        value=10000,
+        step=100
+    )
 
     mode = st.radio(
         "Impact mode:",
@@ -95,81 +93,96 @@ if page == "Dashboard":
 
     filtered = df[df["Method"].isin(selected_methods)].copy()
 
-    if filtered.empty:
-        st.error("Select at least one method.")
-        st.stop()
-
     if mode == "Gross impact":
-        gwp_col = "Gross GWP kg CO2e/kg"
-        ced_col = "Gross CED MJ/kg"
-        cost_col = "Gross Cost EGP/kg"
+        gwp = "Gross GWP kg CO2e/kg"
+        ced = "Gross CED MJ/kg"
+        cost = "Gross Cost EGP/kg"
     else:
-        gwp_col = "Net GWP kg CO2e/kg"
-        ced_col = "Net CED MJ/kg"
-        cost_col = "Net Cost EGP/kg"
+        gwp = "Net GWP kg CO2e/kg"
+        ced = "Net CED MJ/kg"
+        cost = "Net Cost EGP/kg"
 
-    filtered["GWP"] = filtered[gwp_col]
-    filtered["CED"] = filtered[ced_col]
-    filtered["Cost"] = filtered[cost_col]
+    filtered["GWP"] = filtered[gwp]
+    filtered["CED"] = filtered[ced]
+    filtered["Cost"] = filtered[cost]
 
-    filtered["Recovered Output"] = waste_input * filtered["Efficiency (%)"] / 100
-    filtered["Total CO2e"] = waste_input * filtered["GWP"]
-    filtered["Total CED"] = waste_input * filtered["CED"]
+    filtered["Recovered"] = waste_input * filtered["Efficiency (%)"] / 100
+    filtered["CO2"] = waste_input * filtered["GWP"]
+    filtered["Energy"] = waste_input * filtered["CED"]
     filtered["Total Cost"] = waste_input * filtered["Cost"]
 
-    # ---------------- Efficiency ----------------
-    st.header("1. Efficiency Comparison")
+    # ---------------------------------------------------
+    # KPI
+    # ---------------------------------------------------
 
-    fig1 = px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)")
-    fig1.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-    st.plotly_chart(fig1, use_container_width=True)
+    col1, col2, col3 = st.columns(3)
 
-    # ---------------- Environmental ----------------
-    st.header("2. Environmental Impact")
+    col1.metric("Max Efficiency", f"{filtered['Efficiency (%)'].max():.0f}%")
+    col2.metric("Lowest CO2", f"{filtered['GWP'].min():.2f}")
+    col3.metric("Lowest Cost", f"{filtered['Cost'].min():.2f} EGP/kg")
 
-    fig2 = px.bar(filtered, x="Method", y="GWP", text="GWP")
-    fig2.update_traces(texttemplate="%{text:.2f}", textposition="outside")
-    st.plotly_chart(fig2, use_container_width=True)
+    # ---------------------------------------------------
+    # Charts (STATIC / NOT CLICKABLE)
+    # ---------------------------------------------------
 
-    fig3 = px.bar(filtered, x="Method", y="CED", text="CED")
-    fig3.update_traces(texttemplate="%{text:.2f}", textposition="outside")
-    st.plotly_chart(fig3, use_container_width=True)
+    st.subheader("Efficiency Comparison")
 
-    # ---------------- Economic ----------------
-    st.header("3. Economic Impact")
+    fig = px.bar(filtered, x="Method", y="Efficiency (%)", text="Efficiency (%)")
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={"displayModeBar": False, "staticPlot": True}
+    )
 
-    fig4 = px.bar(filtered, x="Method", y="Cost", text="Cost")
-    fig4.update_traces(texttemplate="%{text:.2f}", textposition="outside")
-    st.plotly_chart(fig4, use_container_width=True)
+    st.subheader("CO2 Emissions")
 
-    # ---------------- Scenario Table ----------------
-    st.header("4. Scenario Results")
+    fig = px.bar(filtered, x="Method", y="GWP", text="GWP")
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={"displayModeBar": False, "staticPlot": True}
+    )
 
-    st.dataframe(filtered[[
-        "Method",
-        "Recovered Output",
-        "GWP",
-        "Total CO2e",
-        "CED",
-        "Total CED",
-        "Cost",
-        "Total Cost"
-    ]].round(2), use_container_width=True)
+    st.subheader("Energy Demand")
 
-    # -------------------------------------------------------
-    # REFERENCES (NEW SECTION)
-    # -------------------------------------------------------
+    fig = px.bar(filtered, x="Method", y="CED", text="CED")
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={"displayModeBar": False, "staticPlot": True}
+    )
 
-    st.header("5. References")
+    st.subheader("Cost Comparison")
 
-    st.markdown("""
-    - Volk et al. (2021) — Techno-economic assessment of plastic recycling pathways  
-    - OECD Global Plastics Outlook (2022)  
-    - UNEP Global Plastic Waste Reports  
-    - World Bank — What a Waste 2.0  
-    - European Commission — Circular Economy Action Plan  
-    - IEA Plastics Recycling and Energy Reports  
+    fig = px.bar(filtered, x="Method", y="Cost", text="Cost")
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={"displayModeBar": False, "staticPlot": True}
+    )
 
-    **Note:**  
-    Environmental and cost factors are based on literature benchmarks and are used for comparative analysis only.
-    """)
+    # ---------------------------------------------------
+    # Results Table
+    # ---------------------------------------------------
+
+    st.subheader("Results Table")
+
+    st.dataframe(
+        filtered[[
+            "Method",
+            "Efficiency (%)",
+            "Recovered",
+            "CO2",
+            "Energy",
+            "Cost"
+        ]],
+        use_container_width=True
+    )
+
+    # ---------------------------------------------------
+    # Recommendation (simple)
+    # ---------------------------------------------------
+
+    best = filtered.sort_values(by=["GWP", "Cost"]).iloc[0]
+
+    st.success(f"Recommended pathway: **{best['Method']}**")
