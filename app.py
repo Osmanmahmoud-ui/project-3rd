@@ -159,7 +159,7 @@ if page == "Dashboard":
         config=PLOT_CONFIG
     )
 
-        # =========================
+    # =========================
     # RESULTS
     # =========================
 
@@ -213,11 +213,6 @@ if page == "Dashboard":
 - Egyptian Environmental Affairs Agency (EEAA)
 """)
 
-# =========================
-# MARKET ENGINE
-# =========================
-
-else:
 
 # =========================
 # MARKET ENGINE
